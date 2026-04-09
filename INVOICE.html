@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Optech IT Solutions - Invoice</title>
+    <style>
+        :root {
+            --primary-green: #1A4325;
+            --accent-green: #2E7D32;
+            --light-green: #D6F0E0;
+            --field-gray: #f9f9f9;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        @media print {
+            @page {
+                margin: 0; /* إلغاء الهوامش تلقائياً */
+                size: auto;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                background: #fff !important;
+                -webkit-print-color-adjust: exact !important; /* تفعيل الخلفيات والجرافيكس */
+                print-color-adjust: exact !important;
+            }
+            .invoice-card {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important; /* لضمان عدم توليد صفحة ثانية */
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .no-print, .hide-on-print, .controls, .btn-delete-term, .terms-actions {
+                display: none !important;
+            }
+        }
+
+        body { font-family: var(--font-main); background: #e0e0e0; padding: 20px; color: #333; }
+        
+        .invoice-card { 
+            background: #fff; 
+            width: 850px; 
+            margin: 0 auto; 
+            border: 1px solid #ccc;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* لمنع أي محتوى زائد من خلق صفحة جديدة */
+        }
+
+        .top-banner { height: 8px; background: linear-gradient(to right, #0b2414, #4CAF50); }
+
+        .header { 
+            padding: 15px 40px; 
+            display: grid; 
+            grid-template-columns: 1fr auto 1fr; 
+            align-items: center; 
+            border-bottom: 1px solid #eee; 
+        }
+        
+        .company-info h2 { color: var(--primary-green); font-size: 21px; margin-bottom: 4px; }
+        .company-info p { font-size: 13px; color: #666; line-height: 1.5; }
+
+        .invoice-title-center { text-align: center; }
+        .invoice-title-center h1 { 
+            color: var(--primary-green); 
+            letter-spacing: 4px; 
+            font-size: 32px; 
+            margin: 0;
+        }
+
+        .logo-section { text-align: left; }
+        .logo-section img { width: 100px; height: auto; }
+
+        .invoice-details { padding: 15px 40px; display: flex; justify-content: space-between; background: #fcfcfc; }
+        
+        .bill-to h3 { color: var(--primary-green); font-size: 16px; margin-bottom: 8px; border-bottom: 2px solid var(--accent-green); display: inline-block; }
+        .bill-to input { display: block; width: 280px; border: none; background: transparent; padding: 4px 0; font-size: 14px; font-weight: bold; outline: none; border-bottom: 1px dashed #ccc; margin-bottom: 4px; }
+
+        .meta-data { text-align: left; }
+        .meta-row { display: flex; gap: 15px; margin-bottom: 6px; justify-content: flex-end; }
+        .meta-row label { font-weight: bold; color: var(--primary-green); width: 110px; text-align: right; font-size: 13px; }
+        .meta-row input { width: 140px; border: 1px solid #ddd; padding: 3px 6px; border-radius: 4px; text-align: center; font-size: 13px; }
+
+        .items-table { width: calc(100% - 80px); margin: 10px 40px; border-collapse: collapse; }
+        .items-table th { background: var(--primary-green); color: #fff; padding: 10px; text-align: center; font-size: 13px; }
+        .items-table td { border-bottom: 1px solid #eee; padding: 8px; }
+        
+        .col-desc { width: 50%; }
+        .col-qty { width: 10%; }
+        .col-price { width: 20%; }
+        .col-total { width: 20%; font-weight: bold; text-align: center; font-size: 14px; }
+
+        .items-table input { width: 100%; border: none; padding: 6px; text-align: center; font-size: 13px; background: var(--field-gray); border-radius: 4px; }
+        .items-table .desc-input { text-align: right; }
+
+        .summary-section { padding: 10px 40px; display: flex; justify-content: space-between; }
+        
+        .terms { width: 55%; }
+        .terms h4 { color: var(--primary-green); margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        
+        .terms-list { font-size: 11px; color: #555; padding-right: 0; line-height: 1.6; list-style: none; }
+        .term-item { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+        .term-item input { border: none; background: transparent; border-bottom: 1px solid transparent; width: 100%; font-size: 11px; color: #555; padding: 2px; }
+        .term-item input:focus { border-bottom: 1px dashed #ccc; outline: none; background: #fff; }
+        .btn-delete-term { background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 14px; padding: 0 5px; display: inline-block; }
+        
+        .terms-actions { margin-top: 5px; }
+        .btn-add-term { background: var(--light-green); border: 1px solid var(--accent-green); color: var(--primary-green); padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; }
+
+        .totals-box { width: 35%; }
+        .total-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .total-row.grand-total { background: var(--light-green); padding: 8px; border: none; margin-top: 5px; font-weight: bold; font-size: 16px; color: var(--primary-green); }
+
+        .signature-section { 
+            margin-top: 10px; 
+            padding: 10px 40px 30px 40px; 
+            text-align: center; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .signature-container { position: relative; width: 220px; padding-top: 20px; /* تم تعديلها بدلاً من 240px لرفع التوقيع */ }
+        .signature-image { width: 160px; height: auto; margin-bottom: -10px; position: relative; z-index: 1; }
+        .sig-line { border-top: 2px solid var(--primary-green); width: 100%; padding-top: 5px; font-weight: bold; font-size: 13px; position: relative; z-index: 2; }
+
+        .controls { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; }
+        .btn { padding: 12px; cursor: pointer; border: none; border-radius: 50%; width: 50px; height: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .btn-print { background: var(--primary-green); color: white; }
+        .btn-add { background: #4CAF50; color: white; }
+        .btn-remove { background: #f44336; color: white; }
+        .btn-new { background: #2196F3; color: white; }
+        
+        .input-inline { width: 70px; border: 1px solid #eee; padding: 3px; text-align: center; font-family: inherit; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="invoice-card">
+    <div class="top-banner"></div>
+    
+    <div class="header">
+        <div class="company-info">
+            <h2>Optech IT Solutions</h2>
+            <p>21/2 Oriana Mall, El Mokattam<br>
+            Mokattam • 11693 • Cairo<br>
+            +20 1121450646 • info@optech-eg.com<br>
+            www.optech-eg.com</p>
+        </div>
+
+        <div class="invoice-title-center">
+            <h1>INVOICE</h1>
+        </div>
+
+        <div class="logo-section">
+            <img src="optech-green-dot copy 2.png" alt="Logo">
+        </div>
+    </div>
+
+    <div class="invoice-details">
+        <div class="bill-to">
+            <h3>Bill to / فاتورة إلى</h3>
+            <input type="text" id="clientName" placeholder="اسم العميل" value="أحمد سعد سلومة">
+            <input type="text" id="clientPhone" placeholder="رقم الهاتف" value="+20 101 003 0733">
+        </div>
+        <div class="meta-data">
+            <div class="meta-row">
+                <input type="text" id="invoiceNo">
+                <label>Invoice No</label>
+            </div>
+            <div class="meta-row">
+                <input type="text" id="invoiceDate">
+                <label>Invoice Date</label>
+            </div>
+            <div class="meta-row">
+                <input type="text" id="dueDate" placeholder="DD/MM/YYYY">
+                <label>Due Date</label>
+            </div>
+        </div>
+    </div>
+
+    <table class="items-table" id="itemsTable">
+        <thead>
+            <tr>
+                <th class="col-desc">Description / البيان</th>
+                <th class="col-qty">Quantity</th>
+                <th class="col-price">Unit Price</th>
+                <th class="col-total">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" class="desc-input" value="Horion 75K7A Interactive Display 256/8 Gb"></td>
+                <td><input type="number" class="qty" value="1" oninput="calculate()"></td>
+                <td><input type="number" class="price" value="79000" oninput="calculate()"></td>
+                <td class="total-cell">79,000.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="summary-section">
+        <div class="terms">
+            <h4>Terms & Conditions / شروط وأحكام</h4>
+            <div id="termsList" class="terms-list">
+                <div class="term-item">
+                    <button class="btn-delete-term" onclick="this.parentElement.remove()">×</button>
+                    <span>•</span>
+                    <input type="text" value="ضمان 3 سنوات من تاريخ التسليم/التركيب.">
+                </div>
+                <div class="term-item">
+                    <button class="btn-delete-term" onclick="this.parentElement.remove()">×</button>
+                    <span>•</span>
+                    <input type="text" value="في حالة الاستبدال أو الاسترجاع يرجى الاحتفاظ بهذه الوثيقة.">
+                </div>
+                <div class="term-item">
+                    <button class="btn-delete-term" onclick="this.parentElement.remove()">×</button>
+                    <span>•</span>
+                    <input type="text" value="الضمان لا يشمل الكسر أو مشاكل التركيب الخاطئ بمعرفة العميل.">
+                </div>
+                <div class="term-item">
+                    <button class="btn-delete-term" onclick="this.parentElement.remove()">×</button>
+                    <span>•</span>
+                    <input type="text" value="الضمان لا يشمل العطب نتيجة مشكلة فنية كهربائية أخرى بالجهاز.">
+                </div>
+            </div>
+            <div class="terms-actions">
+                <button class="btn-add-term" onclick="addTerm()">+ إضافة بند جديد</button>
+            </div>
+        </div>
+        
+        <div class="totals-box">
+            <div class="total-row">
+                <span id="subtotal">0.00</span>
+                <span>Sub Total</span>
+            </div>
+
+            <div class="total-row" id="row-tax">
+                <span id="taxValue">0.00</span>
+                <label class="no-print">
+                    <input type="checkbox" id="taxStatus" checked onchange="calculate()"> 
+                    <span>VAT (14%)</span>
+                </label>
+            </div>
+
+            <div class="total-row">
+                <input type="number" id="shippingInput" value="0" oninput="calculate()" class="input-inline">
+                <span>Shipping / شحن</span>
+            </div>
+
+            <div class="total-row" id="row-installation">
+                <input type="number" id="installationInput" value="0" oninput="calculate()" class="input-inline">
+                <label class="no-print">
+                    <input type="checkbox" id="installationStatus" checked onchange="calculate()"> 
+                    <span>Installation / تركيب</span>
+                </label>
+            </div>
+
+            <div class="total-row" id="row-discount">
+                <input type="number" id="discountInput" value="0" oninput="calculate()" class="input-inline">
+                <label class="no-print">
+                    <input type="checkbox" id="discountStatus" checked onchange="calculate()"> 
+                    <span>Discount / خصم</span>
+                </label>
+            </div>
+
+            <div class="total-row grand-total">
+                <span id="grandTotal">EGP 0.00</span>
+                <span>TOTAL / الإجمالي</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-container">
+            <img src="Signature.png" alt="Signature" class="signature-image">
+            <div class="sig-line">Authorized Signature</div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <button class="btn btn-new" onclick="createNewInvoice()" title="فاتورة جديدة">📄</button>
+    <button class="btn btn-add" onclick="addRow()" title="إضافة صنف">+</button>
+    <button class="btn btn-remove" onclick="removeRow()" title="حذف صنف">🗑️</button>
+    <button class="btn btn-print" onclick="prepareAndPrint()" title="طباعة وحفظ">🖨️</button>
+</div>
+
+<script>
+    let currentInvoiceNum = parseInt(localStorage.getItem('lastInvoiceNum')) || 1502268;
+
+    function updateInvoiceDisplay() {
+        document.getElementById('invoiceNo').value = String(currentInvoiceNum).padStart(9, '0');
+    }
+
+    function setDate() {
+        const today = new Date();
+        const formatted = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + today.getFullYear();
+        document.getElementById('invoiceDate').value = formatted;
+    }
+
+    function addTerm() {
+        const container = document.getElementById('termsList');
+        const div = document.createElement('div');
+        div.className = 'term-item';
+        div.innerHTML = `
+            <button class="btn-delete-term" onclick="this.parentElement.remove()">×</button>
+            <span>•</span>
+            <input type="text" placeholder="اكتب الشرط هنا...">
+        `;
+        container.appendChild(div);
+    }
+
+    function createNewInvoice() {
+        currentInvoiceNum++;
+        localStorage.setItem('lastInvoiceNum', currentInvoiceNum);
+        updateInvoiceDisplay();
+        setDate();
+        document.getElementById('clientName').value = '';
+        document.getElementById('clientPhone').value = '';
+        document.getElementById('shippingInput').value = '0';
+        document.getElementById('installationInput').value = '0';
+        document.getElementById('discountInput').value = '0';
+        
+        const tbody = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = `
+            <tr>
+                <td><input type="text" class="desc-input" placeholder="وصف المنتج..."></td>
+                <td><input type="number" class="qty" value="1" oninput="calculate()"></td>
+                <td><input type="number" class="price" value="0" oninput="calculate()"></td>
+                <td class="total-cell">0.00</td>
+            </tr>
+        `;
+        calculate();
+    }
+
+    function addRow() {
+        const table = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow();
+        newRow.innerHTML = `
+            <td><input type="text" class="desc-input" placeholder="وصف المنتج..."></td>
+            <td><input type="number" class="qty" value="1" oninput="calculate()"></td>
+            <td><input type="number" class="price" value="0" oninput="calculate()"></td>
+            <td class="total-cell">0.00</td>
+        `;
+    }
+
+    function removeRow() {
+        const table = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+        if (table.rows.length > 1) {
+            table.deleteRow(table.rows.length - 1);
+            calculate();
+        }
+    }
+
+    function calculate() {
+        let subtotal = 0;
+        const rows = document.querySelectorAll('#itemsTable tbody tr');
+        
+        rows.forEach(row => {
+            const qty = parseFloat(row.querySelector('.qty').value) || 0;
+            const price = parseFloat(row.querySelector('.price').value) || 0;
+            const total = qty * price;
+            row.querySelector('.total-cell').textContent = total.toLocaleString(undefined, {minimumFractionDigits: 2});
+            subtotal += total;
+        });
+
+        let tax = document.getElementById('taxStatus').checked ? subtotal * 0.14 : 0;
+        let installation = document.getElementById('installationStatus').checked ? (parseFloat(document.getElementById('installationInput').value) || 0) : 0;
+        let discount = document.getElementById('discountStatus').checked ? (parseFloat(document.getElementById('discountInput').value) || 0) : 0;
+        let shipping = parseFloat(document.getElementById('shippingInput').value) || 0;
+        
+        const finalTotal = subtotal + tax + shipping + installation - discount;
+
+        document.getElementById('subtotal').textContent = subtotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('taxValue').textContent = tax.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('grandTotal').textContent = 'EGP ' + finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+
+    function prepareAndPrint() {
+        // الحصول على البيانات لاسم الملف
+        const client = (document.getElementById('clientName').value || "Client").trim();
+        const invNo = document.getElementById('invoiceNo').value || "000";
+        const invDate = document.getElementById('invoiceDate').value;
+        
+        // تغيير عنوان المستند ليصبح هو اسم الملف عند الحفظ
+        const originalTitle = document.title;
+        document.title = `${client}_Invoice_${invNo}_${invDate}`;
+        
+        // استدعاء أمر الطباعة
+        window.print();
+        
+        // إعادة العنوان الأصلي بعد نافذة الطباعة
+        setTimeout(() => {
+            document.title = originalTitle;
+        }, 1000);
+    }
+
+    window.onload = () => {
+        updateInvoiceDisplay();
+        setDate();
+        calculate();
+    };
+</script>
+
+</body>
+</html>

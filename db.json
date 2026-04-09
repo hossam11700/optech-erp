@@ -1,0 +1,89 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "1234",
+      "name": "Administrator",
+      "role": "admin",
+      "active": true,
+      "created": "2025-01-01",
+      "lastLogin": "2026-04-09 05:02"
+    },
+    {
+      "id": "1775708715096",
+      "username": "ahmed",
+      "name": "ahmed",
+      "password": "1234",
+      "role": "manager",
+      "active": true,
+      "created": "2026-04-09",
+      "lastLogin": "2026-04-09 04:25"
+    }
+  ],
+  "invoices": [],
+  "receipts": [],
+  "customers": [],
+  "quotations": [],
+  "leads": [],
+  "activities": [
+    {
+      "id": "1775710958770",
+      "type": "login",
+      "description": "User admin logged in successfully",
+      "date": "2026-04-09",
+      "time": "07:02",
+      "user": "admin"
+    },
+    {
+      "id": "1775708885712",
+      "type": "login",
+      "description": "User admin logged in successfully",
+      "date": "2026-04-09",
+      "time": "06:28",
+      "user": "admin"
+    },
+    {
+      "id": "1775708744662",
+      "type": "login",
+      "description": "User ahmed logged in successfully",
+      "date": "2026-04-09",
+      "time": "06:25",
+      "user": "ahmed"
+    },
+    {
+      "id": "1775708715099",
+      "type": "user",
+      "description": "Created new user: ahmed",
+      "date": "2026-04-09",
+      "time": "06:25",
+      "user": "admin"
+    },
+    {
+      "id": "1775708651140",
+      "type": "login",
+      "description": "User admin logged in successfully",
+      "date": "2026-04-09",
+      "time": "06:24",
+      "user": "admin"
+    }
+  ],
+  "inventory": [],
+  "inventory_movements": [],
+  "suppliers": [
+    {
+      "id": "1775708867001",
+      "name": "محمد الدولي",
+      "category": "قطع غيار بروجيكتور",
+      "contactPerson": "الدولي",
+      "phone": "012",
+      "email": "",
+      "address": "",
+      "paymentTerms": "",
+      "products": "",
+      "rating": 4,
+      "notes": "",
+      "created": "4/9/2026"
+    }
+  ]
+}

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>Official Cash Receipt</title>
+    <style>
+        :root {
+            --primary-green: #1A4325;
+            --accent-green: #2E7D32;
+            --bg-gray: #F2F2F2;
+            --field-gray: #E8E8E8;
+            --font-main: 'Times New Roman', Times, serif;
+            --font-sans: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        /* كود إجبار المتصفح على طباعة الألوان والجرافيك */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            body { padding: 0 !important; background: #fff !important; }
+            .actions { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; width: 100% !important; }
+        }
+
+        body { font-family: var(--font-sans); background: #d1d1d1; padding: 40px; color: #333; }
+        
+        .card { 
+            background: #fff; 
+            width: 850px; 
+            margin: 0 auto; 
+            position: relative; 
+            overflow: hidden; 
+            border: 1px solid #999;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+        }
+
+        /* الهيدر */
+        .header { display: flex; align-items: stretch; border-bottom: 2px solid var(--primary-green); }
+        .logo-box { 
+            background: var(--primary-green) !important; /* إضافة !important للطباعة */
+            width: 160px; 
+            padding: 20px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .logo-box img { width: 100%; height: auto; filter: brightness(1.1); }
+        
+        .title-section { flex: 1; text-align: center; padding: 25px; background: #fff; }
+        .title-section h1 { 
+            font-family: var(--font-main);
+            color: var(--primary-green); 
+            font-size: 48px; 
+            margin: 0; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+        .receipt-num { 
+            font-family: var(--font-sans);
+            color: #555; 
+            font-size: 14px; 
+            margin-top: 8px; 
+            letter-spacing: 1px;
+        }
+        .receipt-num span { font-weight: 600; color: #000; }
+
+        /* جسم الإيصال */
+        .body { padding: 40px 50px; display: flex; flex-direction: column; gap: 25px; }
+        .row { display: flex; align-items: center; gap: 15px; }
+        .lbl { 
+            font-family: var(--font-main);
+            font-size: 18px; 
+            font-weight: bold; 
+            color: var(--primary-green); 
+            min-width: 160px;
+            text-transform: capitalize;
+        }
+        
+        .field { 
+            flex: 1; 
+            background: transparent; 
+            border: none;
+            border-bottom: 1.5px solid #ccc; 
+            height: 35px; 
+            padding: 0 10px; 
+            font-size: 18px; 
+            outline: none;
+        }
+        .rtl-field { text-align: right; font-family: 'Arial', sans-serif; }
+
+        .date-row { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .date-input { 
+            border: 1px solid #ccc;
+            background: #fff !important;
+            width: 55px; 
+            height: 32px; 
+            text-align: center; 
+            font-size: 16px; 
+        }
+
+        .half-row { display: flex; gap: 40px; width: 100%; }
+        
+        /* التوقيع والختم */
+        .sig-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 30px 50px 50px 50px;
+        }
+        .sig-line {
+            border-top: 1px solid #000;
+            width: 200px;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 14px;
+            padding-top: 5px;
+        }
+
+        /* الشريط السفلي الملون مع ضمان ظهوره في الطباعة */
+        .footer-strip { display: flex; height: 15px; width: 100%; }
+        .strip-1 { background: #0b2414 !important; flex: 1; }
+        .strip-2 { background: #1A4325 !important; flex: 1; }
+        .strip-3 { background: #2E7D32 !important; flex: 1; }
+        .strip-4 { background: #4CAF50 !important; flex: 1; }
+
+        /* الأزرار */
+        .actions { text-align: center; margin-top: 30px; display: flex; justify-content: center; gap: 15px; }
+        .btn { 
+            padding: 10px 25px; 
+            cursor: pointer; 
+            border: 1px solid var(--primary-green); 
+            border-radius: 2px; 
+            font-weight: 600; 
+            font-family: var(--font-sans);
+            transition: 0.2s;
+        }
+        .btn-print { background: var(--primary-green); color: white; }
+        .btn-new { background: #fff; color: var(--primary-green); }
+    </style>
+</head>
+<body>
+
+<div class="card" id="receipt">
+    <div class="header">
+        <div class="logo-box">
+            <img src="optech-green-dot copy.png" alt="Logo">
+        </div>
+        <div class="title-section">
+            <h1>Cash Receipt</h1>
+            <div class="receipt-num">Ref No: <span id="numDisplay">000000</span></div>
+        </div>
+    </div>
+
+    <div class="body">
+        <div class="row">
+            <span class="lbl">Date of Issue:</span>
+            <div class="date-row">
+                <input class="date-input" id="day" type="text"> / 
+                <input class="date-input" id="month" type="text"> / 
+                <input class="date-input" id="year" type="text" style="width: 80px;">
+            </div>
+        </div>
+
+        <div class="row">
+            <span class="lbl">Received From:</span>
+            <input class="field rtl-field" id="fromField" type="text" dir="rtl">
+        </div>
+
+        <div class="half-row">
+            <div class="row" style="flex: 1;">
+                <span class="lbl">Amount:</span>
+                <input class="field" id="amountField" type="text" placeholder="USD / EGP">
+            </div>
+            <div class="row" style="flex: 1.2;">
+                <span class="lbl" style="min-width: auto;">Payment Method:</span>
+                <input class="field" id="checkField" type="text" placeholder="Cash / Check No.">
+            </div>
+        </div>
+
+        <div class="row">
+            <span class="lbl">Description:</span>
+            <input class="field rtl-field" id="forField" type="text" dir="rtl">
+        </div>
+    </div>
+
+    <div class="sig-row">
+        <div>
+            <span class="lbl" style="display: block;">Authorized Signature</span>
+            <div class="sig-line">Receiver Name</div>
+        </div>
+        <div>
+            <span class="lbl" style="display: block; text-align: center;">Official Stamp</span>
+            <div style="border: 1px dashed #ccc; width: 120px; height: 120px; margin: 10px auto; border-radius: 50%;"></div>
+        </div>
+    </div>
+
+    <div class="footer-strip">
+        <div class="strip-1"></div>
+        <div class="strip-2"></div>
+        <div class="strip-3"></div>
+        <div class="strip-4"></div>
+    </div>
+</div>
+
+<div class="actions">
+    <button class="btn btn-new" onclick="createNewReceipt()">Generate New Receipt</button>
+    <button class="btn btn-print" onclick="window.print()">Print Document</button>
+</div>
+
+<script>
+    let currentNumber = parseInt(localStorage.getItem('lastReceiptNum')) || 26040;
+
+    function updateDisplay() {
+        document.getElementById('numDisplay').textContent = String(currentNumber).padStart(6, '0');
+    }
+
+    function setDate() {
+        const today = new Date();
+        document.getElementById('day').value = String(today.getDate()).padStart(2, '0');
+        document.getElementById('month').value = String(today.getMonth() + 1).padStart(2, '0');
+        document.getElementById('year').value = today.getFullYear();
+    }
+
+    function createNewReceipt() {
+        currentNumber++;
+        localStorage.setItem('lastReceiptNum', currentNumber);
+        updateDisplay();
+        document.getElementById('fromField').value = '';
+        document.getElementById('amountField').value = '';
+        document.getElementById('checkField').value = '';
+        document.getElementById('forField').value = '';
+        setDate();
+    }
+
+    window.onload = function() {
+        updateDisplay();
+        setDate();
+    };
+</script>
+
+</body>
+</html>

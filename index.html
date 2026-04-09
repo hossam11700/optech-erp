@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPTECH ERP System</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%231A4325'/%3E%3Ccircle cx='256' cy='185' r='88' fill='none' stroke='%234CAF50' stroke-width='38'/%3E%3Ccircle cx='256' cy='185' r='30' fill='%234CAF50'/%3E%3Cpath d='M108 395 c0-80 66-138 148-138 82 0 148 58 148 138' fill='none' stroke='%234CAF50' stroke-width='38' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="db-client.js"></script>
+    <!-- Auth guard: redirect to login if no valid session -->
+    <script>
+    (async function authGuard() {
+        if (!DbClient.IS_SERVER) return; // local file mode — skip auth
+        const ok = await DbClient.ping();
+        if (!ok) window.location.replace('login.html');
+    })();
+    </script>
+</head>
+<body>
+    <div class="sidebar no-print">
+        <div class="sidebar-logo">
+            <img src="optech-green-dot copy.png" alt="Logo" onerror="this.style.display='none'">
+            <h2 style="font-size:16px;letter-spacing:2px;">OPTECH</h2>
+            <p style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px;">ERP System</p>
+        </div>
+
+        <!-- Current user badge -->
+        <div id="user-badge" style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px;">
+            <div style="width:30px;height:30px;background:var(--accent-green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">👤</div>
+            <div>
+                <div id="user-name" style="font-size:12px;color:white;font-weight:600;">Loading…</div>
+                <div id="user-role" style="font-size:10px;color:rgba(255,255,255,.5);">—</div>
+            </div>
+        </div>
+
+        <nav>
+            <a href="#" onclick="showSection('dashboard')"  class="nav-item active">📊 Dashboard</a>
+            <a href="#" onclick="showSection('invoices')"   class="nav-item">📄 Invoices</a>
+            <a href="#" onclick="showSection('receipts')"   class="nav-item">💰 Cash Receipts</a>
+            <a href="#" onclick="showSection('quotations')" class="nav-item">📜 Quotations</a>
+            <a href="#" onclick="showSection('customers')"  class="nav-item">👥 Customers</a>
+            <a href="#" onclick="showSection('suppliers')"  class="nav-item">🏭 Suppliers</a>
+            <a href="#" onclick="showSection('inventory')"  class="nav-item">📦 Inventory</a>
+            <a href="#" onclick="showSection('crm')"        class="nav-item">🎯 CRM</a>
+            <a href="#" onclick="showSection('reports')"    class="nav-item">📈 Reports</a>
+            <a href="#" onclick="showSection('auth')"       class="nav-item">🔐 Admin</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button onclick="toggleDarkMode()" class="btn-secondary">🌓 Dark Mode</button>
+            <button onclick="doLogout()"        class="btn-secondary" style="background:rgba(198,40,40,.3);">🚪 Logout</button>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div id="view-container"></div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+    // Show current user in sidebar
+    (function() {
+        const u = DbClient.getCurrentUser();
+        if (u) {
+            document.getElementById('user-name').textContent = u.name || u.username;
+            document.getElementById('user-role').textContent = (u.role||'user').toUpperCase();
+        }
+    })();
+
+    async function doLogout() {
+        await DbClient.logout();
+        window.location.replace('login.html');
+    }
+    </script>
+</body>
+</html>

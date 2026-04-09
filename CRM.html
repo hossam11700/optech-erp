@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPTECH CRM</title>
+<!-- 512x512 SVG favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%231A4325'/%3E%3Ccircle cx='256' cy='200' r='90' fill='none' stroke='%234CAF50' stroke-width='36'/%3E%3Ccircle cx='256' cy='200' r='28' fill='%234CAF50'/%3E%3Cpath d='M120 390 c0-75 60-130 136-130h0c76 0 136 55 136 130' fill='none' stroke='%234CAF50' stroke-width='36' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" sizes="512x512" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%231A4325'/%3E%3Ccircle cx='256' cy='200' r='90' fill='none' stroke='%234CAF50' stroke-width='36'/%3E%3Ccircle cx='256' cy='200' r='28' fill='%234CAF50'/%3E%3Cpath d='M120 390 c0-75 60-130 136-130h0c76 0 136 55 136 130' fill='none' stroke='%234CAF50' stroke-width='36' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="db-client.js"></script>
+<style>
+:root {
+  --g9:#1A4325; --g7:#2E7D32; --g4:#4CAF50; --g1:#D6F0E0;
+  --sw:260px; --bg:#f0f4f1; --card:#fff; --border:#e0e8e2;
+  --txt:#1e2d24; --muted:#6b8073; --blue:#1565C0;
+  --amber:#e65100; --red:#c62828; --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sw);background:var(--g9);color:#fff;position:fixed;height:100vh;display:flex;flex-direction:column;z-index:200;top:0;left:0}
+.sidebar-logo{padding:20px;border-bottom:1px solid rgba(255,255,255,.1);text-align:center}
+.sidebar-logo img{width:72px;display:block;margin:0 auto 8px}
+.sidebar-logo h2{font-size:17px;letter-spacing:2px}
+.sidebar-logo p{font-size:11px;color:var(--g4);margin-top:2px}
+.nav{flex:1;padding:10px 0;overflow-y:auto}
+.nav a{display:flex;align-items:center;gap:10px;padding:12px 20px;color:rgba(255,255,255,.78);text-decoration:none;font-size:14px;transition:.2s;cursor:pointer}
+.nav a:hover,.nav a.active{background:var(--g7);color:#fff}
+.nav a .badge{margin-left:auto;background:var(--g4);color:#fff;font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700}
+.sidebar-back{padding:14px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-back a{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.55);text-decoration:none;font-size:13px}
+.sidebar-back a:hover{color:#fff}
+
+.main{margin-left:var(--sw);flex:1;padding:28px;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.topbar h1{font-size:22px;color:var(--g9);font-weight:700}
+.topbar p{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 18px;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;transition:.15s}
+.btn-primary{background:var(--g9);color:#fff}.btn-primary:hover{background:var(--g7)}
+.btn-outline{background:#fff;color:var(--g9);border:1.5px solid var(--g9)}.btn-outline:hover{background:var(--g1)}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#b71c1c}
+.btn-success{background:var(--g7);color:#fff}.btn-success:hover{background:var(--g9)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:5px}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.scard{background:var(--card);border-radius:var(--r);padding:14px 16px;border-left:4px solid var(--g4);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.scard.b{border-left-color:var(--blue)}.scard.a{border-left-color:var(--amber)}.scard.r{border-left-color:var(--red)}.scard.p{border-left-color:#6a1b9a}
+.scard h4{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.scard p{font-size:22px;font-weight:700;color:var(--g9)}
+
+/* ── PIPELINE ── */
+.pipeline-wrap{overflow-x:auto;padding-bottom:8px}
+.pipeline{display:flex;gap:12px;min-height:420px;width:max-content;min-width:100%}
+.stage{background:var(--card);border-radius:var(--r);width:180px;flex-shrink:0;display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden}
+.stage-header{padding:10px 12px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.stage-header .sh-left{display:flex;align-items:center;gap:6px}
+.stage-header .sh-emoji{font-size:16px}
+.stage-header .sh-label{font-size:12px;font-weight:700}
+.stage-header .sh-val{font-size:9px;color:var(--muted);display:block;font-weight:400;margin-top:1px}
+.stage-header .count{border-radius:99px;padding:2px 7px;font-size:10px;font-weight:700}
+.stage-cards{flex:1;padding:8px;display:flex;flex-direction:column;gap:7px;overflow-y:auto;max-height:460px}
+.deal-card{background:var(--bg);border-radius:8px;padding:10px 10px 8px;border:1.5px solid var(--border);cursor:pointer;transition:.15s;position:relative}
+.deal-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.deal-name{font-size:12px;font-weight:700;margin-bottom:2px;padding-right:12px}
+.deal-company{font-size:10px;color:var(--muted);margin-bottom:6px}
+.deal-value{font-size:13px;font-weight:700;color:var(--g7)}
+.deal-date{font-size:9px;color:var(--muted);float:right;margin-top:2px}
+.deal-prio{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%}
+.p-high{background:var(--red)}.p-medium{background:var(--amber)}.p-low{background:var(--g4)}
+.stage-add{padding:7px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;border-top:1px solid var(--border);width:100%;text-align:left;transition:.15s}
+.stage-add:hover{background:var(--g1);color:var(--g9)}
+
+/* ── TABLES ── */
+.section-card{background:var(--card);border-radius:var(--r);box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden}
+.sc-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.sc-header h3{font-size:15px;font-weight:700}
+table.ct{width:100%;border-collapse:collapse}
+table.ct th{background:var(--g9);color:#fff;padding:10px 12px;text-align:left;font-size:12px;font-weight:600;white-space:nowrap}
+table.ct td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+table.ct tr:last-child td{border-bottom:none}
+table.ct tr:hover td{background:#f6fbf7}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill-new{background:#e3f2fd;color:#1565C0}.pill-contact{background:#fff8e1;color:#e65100}
+.pill-proposal{background:#f3e5f5;color:#6a1b9a}.pill-nego{background:#e8f5e9;color:#2E7D32}
+.pill-won{background:#1A4325;color:#fff}.pill-lost{background:#ffebee;color:#c62828}
+
+/* ── ACTIVITY LIST ── */
+.act-list{padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.act-item{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);transition:.15s}
+.act-item:hover{border-color:var(--g4)}
+.act-item.done{opacity:.55}
+.act-item.done .act-desc{text-decoration:line-through;color:var(--muted)}
+.act-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;margin-top:2px}
+.act-body{flex:1;min-width:0}
+.act-desc{font-size:13px;font-weight:600;margin-bottom:3px}
+.act-meta{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px}
+.act-actions{display:flex;gap:5px;flex-shrink:0;margin-top:2px}
+.empty-state{text-align:center;padding:36px 20px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+
+/* ── MODAL OVERLAY (appended to body) ── */
+.crm-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.52);
+  display:flex;align-items:center;justify-content:center;
+  z-index:99999;
+  padding:20px;
+  overflow-y:auto;
+}
+.crm-modal{
+  background:#fff;
+  border-radius:14px;
+  width:100%;max-width:580px;
+  max-height:92vh;
+  overflow-y:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,.25);
+  position:relative;
+  margin:auto;
+}
+.cm-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.cm-header h3{font-size:16px;font-weight:700;color:var(--g9)}
+.cm-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.cm-close:hover{background:#f5f5f5;color:#333}
+.cm-body{padding:22px}
+.cm-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+/* ── FORM ── */
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.fg label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.fg input,.fg select,.fg textarea{border:1.5px solid var(--border);border-radius:7px;padding:9px 11px;font-size:14px;outline:none;font-family:inherit;transition:.15s;background:#fff;width:100%}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--g7);box-shadow:0 0 0 3px rgba(46,125,50,.1)}
+.fg textarea{resize:vertical;min-height:72px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ── EXPORT BTN ── */
+.export-row{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div style="display:flex">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <img src="optech-green-dot copy.png" alt="OPTECH" onerror="this.style.display='none'">
+    <h2>OPTECH</h2>
+    <p>CRM</p>
+  </div>
+  <nav class="nav">
+    <a id="tab-pipeline"   onclick="switchTab('pipeline')"   class="active">🎯 Pipeline</a>
+    <a id="tab-leads"      onclick="switchTab('leads')"              >👤 Leads &amp; Deals <span class="badge" id="leads-badge">0</span></a>
+    <a id="tab-activities" onclick="switchTab('activities')"         >📋 Activities <span class="badge" id="act-badge" style="background:#e65100;">0</span></a>
+    <a id="tab-analytics"  onclick="switchTab('analytics')"         >📊 Analytics</a>
+  </nav>
+  <div class="sidebar-back">
+    <a href="index.html">← Back to ERP</a>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <h1 id="page-title">CRM — Sales Pipeline</h1>
+      <p id="page-sub">Manage leads, deals and client relationships</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="topbar-actions">
+      <button class="btn btn-outline" onclick="openActivityModal()">📋 Log Activity</button>
+      <button class="btn btn-primary" onclick="openDealModal()">＋ Add Lead / Deal</button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="crm-stats"></div>
+
+  <div id="panel-pipeline"></div>
+  <div id="panel-leads"      style="display:none"></div>
+  <div id="panel-activities" style="display:none"></div>
+  <div id="panel-analytics"  style="display:none"></div>
+</main>
+</div>
+
+<script>
+// ════════════════════════════════
+// DATA
+// ════════════════════════════════
+let leads      = [];
+let activities = [];
+
+function saveLeads()      { DbClient.saveCollection('leads',      leads);      }
+function saveActivities() { DbClient.saveCollection('activities', activities); }
+
+async function initCRM() {
+  const data = await DbClient.loadAll();
+  if (data) {
+    leads      = data.leads      || [];
+    activities = data.activities || [];
+  } else {
+    leads      = JSON.parse(localStorage.getItem('optech_leads'))      || [];
+    activities = JSON.parse(localStorage.getItem('optech_activities')) || [];
+  }
+  renderStats();
+  renderPipeline();
+  updateBadges();
+}
+
+// ════════════════════════════════
+// STAGES CONFIG
+// ════════════════════════════════
+const STAGES = [
+  { id:'new',         label:'New Lead',      emoji:'🔵', color:'#1565C0' },
+  { id:'contact',     label:'Contacted',     emoji:'📞', color:'#e65100' },
+  { id:'proposal',    label:'Proposal Sent', emoji:'📄', color:'#6a1b9a' },
+  { id:'negotiation', label:'Negotiation',   emoji:'🤝', color:'#2E7D32' },
+  { id:'won',         label:'Won',           emoji:'✅', color:'#1A4325' },
+  { id:'lost',        label:'Lost',          emoji:'❌', color:'#c62828' }
+];
+
+const ACT_TYPES = {
+  call:         { label:'Phone Call',       emoji:'📞', bg:'#e3f2fd' },
+  email:        { label:'Email',            emoji:'📧', bg:'#fff8e1' },
+  meet:         { label:'Meeting',          emoji:'🤝', bg:'#e8f5e9' },
+  maintenance:  { label:'Maintenance',      emoji:'🔧', bg:'#fce4ec' },
+  installation: { label:'Installation',     emoji:'⚙️',  bg:'#e0f7fa' },
+  supply:       { label:'Supply / Delivery',emoji:'📦', bg:'#f9fbe7' },
+  note:         { label:'Note',             emoji:'📝', bg:'#f3e5f5' }
+};
+
+// ════════════════════════════════
+// TABS
+// ════════════════════════════════
+let currentTab = 'pipeline';
+function switchTab(tab) {
+  currentTab = tab;
+  ['pipeline','leads','activities','analytics'].forEach(t => {
+    document.getElementById('panel-' + t).style.display = (t === tab) ? 'block' : 'none';
+    const el = document.getElementById('tab-' + t);
+    if (el) el.classList.toggle('active', t === tab);
+  });
+  const titles = {
+    pipeline:   ['🎯 CRM — Sales Pipeline',   'Drag deals between stages'],
+    leads:      ['👤 Leads & Deals',           'Full list of all leads and deals'],
+    activities: ['📋 Activity Log',            'Calls, meetings, maintenance, installations'],
+    analytics:  ['📊 CRM Analytics',           'Performance metrics and conversion stats']
+  };
+  const [title, sub] = titles[tab] || ['CRM',''];
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('page-sub').textContent   = sub;
+
+  const actionsMap = {
+    pipeline:   `<button class="btn btn-outline" onclick="openActivityModal()">📋 Log Activity</button><button class="btn btn-primary" onclick="openDealModal()">＋ Add Lead / Deal</button>`,
+    leads:      `<button class="btn btn-outline" onclick="exportCSV('leads')">⬇ Export CSV</button><button class="btn btn-primary" onclick="openDealModal()">＋ Add Lead</button>`,
+    activities: `<button class="btn btn-outline" onclick="exportCSV('activities')">⬇ Export CSV</button><button class="btn btn-primary" onclick="openActivityModal()">＋ Log Activity</button>`,
+    analytics:  ''
+  };
+  document.getElementById('topbar-actions').innerHTML = actionsMap[tab] || '';
+
+  renderStats();
+  if (tab === 'pipeline')   renderPipeline();
+  if (tab === 'leads')      renderLeadsTable();
+  if (tab === 'activities') renderActivities();
+  if (tab === 'analytics')  renderAnalytics();
+}
+
+// ════════════════════════════════
+// STATS
+// ════════════════════════════════
+function renderStats() {
+  const won   = leads.filter(l => l.stage === 'won');
+  const open  = leads.filter(l => !['won','lost'].includes(l.stage));
+  const total = leads.reduce((s,l) => s + (parseFloat(l.value)||0), 0);
+  const wonV  = won.reduce((s,l)   => s + (parseFloat(l.value)||0), 0);
+  const cr    = leads.length ? Math.round(won.length / leads.length * 100) : 0;
+  const pendAct = activities.filter(a => !a.done).length;
+
+  document.getElementById('crm-stats').innerHTML = `
+    <div class="scard">   <h4>Total Leads</h4>    <p>${leads.length}</p></div>
+    <div class="scard b"> <h4>Open Deals</h4>     <p>${open.length}</p></div>
+    <div class="scard">   <h4>Pipeline Value</h4> <p>EGP ${(total/1000).toFixed(0)}K</p></div>
+    <div class="scard a"> <h4>Won Deals</h4>      <p>${won.length}</p></div>
+    <div class="scard">   <h4>Won Value</h4>      <p>EGP ${(wonV/1000).toFixed(0)}K</p></div>
+    <div class="scard r"> <h4>Conversion</h4>     <p>${cr}%</p></div>
+    <div class="scard p"> <h4>Pending Actions</h4><p>${pendAct}</p></div>`;
+  updateBadges();
+}
+
+function updateBadges() {
+  document.getElementById('leads-badge').textContent  = leads.length;
+  document.getElementById('act-badge').textContent    = activities.filter(a=>!a.done).length;
+}
+
+// ════════════════════════════════
+// PIPELINE
+// ════════════════════════════════
+function renderPipeline() {
+  document.getElementById('panel-pipeline').innerHTML = `
+    <div class="pipeline-wrap">
+      <div class="pipeline">
+        ${STAGES.map(s => {
+          const cards = leads.filter(l => l.stage === s.id);
+          const val   = cards.reduce((sum,c) => sum + (parseFloat(c.value)||0), 0);
+          return `
+          <div class="stage" data-stage="${s.id}">
+            <div class="stage-header" style="background:${s.color}12;border-bottom:2px solid ${s.color}44;">
+              <div class="sh-left">
+                <span class="sh-emoji">${s.emoji}</span>
+                <div>
+                  <div class="sh-label" style="color:${s.color}">${s.label}</div>
+                  <span class="sh-val">EGP ${(val/1000).toFixed(0)}K</span>
+                </div>
+              </div>
+              <span class="count" style="background:${s.color}22;color:${s.color};">${cards.length}</span>
+            </div>
+            <div class="stage-cards"
+                ondragover="event.preventDefault()"
+                ondrop="dropDeal(event,'${s.id}')">
+              ${cards.map(c => dealCardHTML(c)).join('')}
+            </div>
+            <button class="stage-add" onclick="openDealModalStage('${s.id}')">＋ Add deal</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function dealCardHTML(c) {
+  const stage  = STAGES.find(s => s.id === c.stage);
+  const pClass = {high:'p-high',medium:'p-medium',low:'p-low'}[c.priority] || 'p-low';
+  const daysIn = c.stageDate ? Math.floor((Date.now()-new Date(c.stageDate))/(864e5)) : null;
+  return `
+    <div class="deal-card" draggable="true"
+         ondragstart="dragDeal(event,'${c.id}')"
+         onclick="openEditModal('${c.id}')">
+      <div class="deal-prio ${pClass}"></div>
+      <div class="deal-name">${c.name}</div>
+      <div class="deal-company">${c.company||''} ${c.source?'· '+c.source:''}</div>
+      <div class="deal-value">EGP ${parseFloat(c.value||0).toLocaleString()}</div>
+      ${daysIn!==null?`<div style="font-size:9px;color:var(--muted);margin-top:4px;">${daysIn}d in stage</div>`:''}
+      <div class="deal-date">${c.closeDate||''}</div>
+    </div>`;
+}
+
+let dragId = null;
+function dragDeal(e,id) { dragId = id; }
+function dropDeal(e, stage) {
+  if (!dragId) return;
+  const l = leads.find(x => x.id === dragId);
+  if (l) { l.stage = stage; l.stageDate = new Date().toISOString(); saveLeads(); }
+  dragId = null;
+  renderPipeline(); renderStats();
+}
+
+// ════════════════════════════════
+// LEADS TABLE
+// ════════════════════════════════
+function renderLeadsTable() {
+  const pillMap = {new:'pill-new',contact:'pill-contact',proposal:'pill-proposal',negotiation:'pill-nego',won:'pill-won',lost:'pill-lost'};
+  const prioHTML = {high:'<span style="color:#c62828;font-weight:700;">▲ High</span>',medium:'<span style="color:#e65100;">● Medium</span>',low:'<span style="color:#2E7D32;">▼ Low</span>'};
+  document.getElementById('panel-leads').innerHTML = `
+    <div class="section-card">
+      <div class="sc-header">
+        <h3>All Leads & Deals (${leads.length})</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" placeholder="🔍 Search name or company…" oninput="filterLeads(this.value)"
+            style="border:1.5px solid var(--border);padding:8px 12px;border-radius:7px;font-size:13px;outline:none;width:220px;">
+          <button class="btn btn-outline btn-sm" onclick="exportCSV('leads')">⬇ Export CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openDealModal()">＋ Add Lead</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="ct" id="leads-tbl">
+          <thead><tr>
+            <th>#</th><th>Contact</th><th>Company</th><th>Phone</th>
+            <th>Value</th><th>Stage</th><th>Priority</th><th>Source</th><th>Close Date</th><th>Actions</th>
+          </tr></thead>
+          <tbody>${leadsRows(leads)}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function leadsRows(arr) {
+  if (!arr.length) return `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--muted);">No leads yet — click "＋ Add Lead" to start.</td></tr>`;
+  const pillMap = {new:'pill-new',contact:'pill-contact',proposal:'pill-proposal',negotiation:'pill-nego',won:'pill-won',lost:'pill-lost'};
+  const prioHTML = {high:'<b style="color:#c62828">▲ High</b>',medium:'<span style="color:#e65100">● Med</span>',low:'<span style="color:#2E7D32">▼ Low</span>'};
+  return arr.map((c,i) => `
+    <tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><strong>${c.name}</strong><div style="font-size:11px;color:var(--muted)">${c.email||''}</div></td>
+      <td>${c.company||'—'}</td>
+      <td>${c.phone||'—'}</td>
+      <td><strong style="color:var(--g7)">EGP ${parseFloat(c.value||0).toLocaleString()}</strong></td>
+      <td><span class="pill ${pillMap[c.stage]||'pill-new'}">${STAGES.find(s=>s.id===c.stage)?.emoji||''} ${STAGES.find(s=>s.id===c.stage)?.label||c.stage}</span></td>
+      <td>${prioHTML[c.priority]||'—'}</td>
+      <td>${c.source||'—'}</td>
+      <td>${c.closeDate||'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-outline btn-xs" onclick="openEditModal('${c.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" style="margin-left:4px" onclick="confirmDeleteDeal('${c.id}')">Del</button>
+      </td>
+    </tr>`).join('');
+}
+function filterLeads(q) {
+  const f = q ? leads.filter(l => (l.name+l.company+l.email).toLowerCase().includes(q.toLowerCase())) : leads;
+  document.querySelector('#leads-tbl tbody').innerHTML = leadsRows(f);
+}
+
+// ════════════════════════════════
+// ACTIVITIES
+// ════════════════════════════════
+function renderActivities() {
+  const pending   = activities.filter(a => !a.done);
+  const completed = activities.filter(a =>  a.done);
+
+  document.getElementById('panel-activities').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+      <!-- Pending -->
+      <div class="section-card">
+        <div class="sc-header">
+          <h3>⏳ Pending (${pending.length})</h3>
+          <button class="btn btn-primary btn-sm" onclick="openActivityModal()">＋ Log</button>
+        </div>
+        <div class="act-list" id="act-pending">
+          ${pending.length ? pending.slice().reverse().map(a => actItemHTML(a)).join('') : `<div class="empty-state"><div class="empty-icon">✅</div><p>All caught up!</p></div>`}
+        </div>
+      </div>
+
+      <!-- Completed -->
+      <div class="section-card">
+        <div class="sc-header">
+          <h3>✅ Completed (${completed.length})</h3>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV('activities')">⬇ CSV</button>
+        </div>
+        <div class="act-list" id="act-done">
+          ${completed.length ? completed.slice().reverse().slice(0,20).map(a => actItemHTML(a)).join('') : `<div class="empty-state"><div class="empty-icon">📋</div><p>No completed activities yet</p></div>`}
+        </div>
+      </div>
+
+    </div>`;
+}
+
+function actItemHTML(a) {
+  const t   = ACT_TYPES[a.type] || ACT_TYPES.note;
+  const done = a.done;
+  return `
+    <div class="act-item${done?' done':''}" id="act-${a.id}">
+      <div class="act-icon" style="background:${t.bg}">${t.emoji}</div>
+      <div class="act-body">
+        <div class="act-desc">${a.desc}</div>
+        <div class="act-meta">
+          <span>${t.label}</span>
+          <span>📅 ${a.date||''}</span>
+          ${a.leadName?`<span>👤 ${a.leadName}</span>`:''}
+          ${a.next&&!done?`<span style="color:var(--amber)">→ ${a.next}</span>`:''}
+        </div>
+      </div>
+      <div class="act-actions">
+        ${!done
+          ? `<button class="btn btn-success btn-xs" onclick="markActDone('${a.id}')">✓ Done</button>`
+          : `<button class="btn btn-outline btn-xs" onclick="markActDone('${a.id}')">↩</button>`}
+        <button class="btn btn-outline btn-xs" onclick="openEditActivityModal('${a.id}')">✏</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteActivity('${a.id}')">×</button>
+      </div>
+    </div>`;
+}
+
+function markActDone(id) {
+  const a = activities.find(x => x.id === id);
+  if (!a) return;
+  a.done = !a.done;
+  saveActivities();
+  renderActivities(); renderStats();
+}
+
+function deleteActivity(id) {
+  if (!confirm('Delete this activity?')) return;
+  activities = activities.filter(a => a.id !== id);
+  saveActivities();
+  renderActivities(); renderStats();
+}
+
+// ════════════════════════════════
+// ANALYTICS
+// ════════════════════════════════
+function renderAnalytics() {
+  const stageVal = {};
+  STAGES.forEach(s => stageVal[s.id] = { count:0, value:0 });
+  leads.forEach(l => {
+    stageVal[l.stage].count++;
+    stageVal[l.stage].value += parseFloat(l.value)||0;
+  });
+  const srcMap = {};
+  leads.forEach(l => { srcMap[l.source||'Other'] = (srcMap[l.source||'Other']||0)+1; });
+  const actTypeMap = {};
+  activities.forEach(a => { actTypeMap[a.type||'note'] = (actTypeMap[a.type||'note']||0)+1; });
+
+  document.getElementById('panel-analytics').innerHTML = `
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
+      ${STAGES.map(s=>`
+        <div class="scard" style="border-left-color:${s.color}">
+          <h4>${s.emoji} ${s.label}</h4>
+          <p>${stageVal[s.id].count}</p>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">EGP ${stageVal[s.id].value.toLocaleString()}</div>
+        </div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
+      <div class="section-card" style="padding:20px">
+        <h3 style="margin-bottom:14px;font-size:14px">Pipeline by Stage</h3>
+        <canvas id="stageChart" height="220"></canvas>
+      </div>
+      <div class="section-card" style="padding:20px">
+        <h3 style="margin-bottom:14px;font-size:14px">Leads by Source</h3>
+        <canvas id="sourceChart" height="220"></canvas>
+      </div>
+      <div class="section-card" style="padding:20px">
+        <h3 style="margin-bottom:14px;font-size:14px">Activity Types</h3>
+        <canvas id="actChart" height="220"></canvas>
+      </div>
+    </div>`;
+
+  const drawCharts = () => {
+    new Chart(document.getElementById('stageChart'), {
+      type:'bar',
+      data:{ labels:STAGES.map(s=>s.emoji+' '+s.label), datasets:[{ data:STAGES.map(s=>stageVal[s.id].count), backgroundColor:STAGES.map(s=>s.color), borderRadius:5 }] },
+      options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1}}} }
+    });
+    new Chart(document.getElementById('sourceChart'), {
+      type:'doughnut',
+      data:{ labels:Object.keys(srcMap), datasets:[{ data:Object.values(srcMap), backgroundColor:['#1A4325','#2E7D32','#4CAF50','#e65100','#1565C0','#888','#6a1b9a'], borderWidth:0 }] },
+      options:{ plugins:{legend:{position:'bottom'}} }
+    });
+    const actKeys = Object.keys(actTypeMap);
+    new Chart(document.getElementById('actChart'), {
+      type:'doughnut',
+      data:{ labels:actKeys.map(k=>(ACT_TYPES[k]?.emoji||'📝')+' '+(ACT_TYPES[k]?.label||k)), datasets:[{ data:actKeys.map(k=>actTypeMap[k]), backgroundColor:['#1565C0','#ffa000','#2E7D32','#c62828','#6a1b9a','#e65100','#888'], borderWidth:0 }] },
+      options:{ plugins:{legend:{position:'bottom'}} }
+    });
+  };
+  if (typeof Chart === 'undefined') {
+    const s = document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/chart.js'; s.onload=drawCharts; document.head.appendChild(s);
+  } else drawCharts();
+}
+
+// ════════════════════════════════
+// MODAL ENGINE (always appended to body → no z-index issues on server)
+// ════════════════════════════════
+let _activeOverlay = null;
+
+function openOverlay(contentHTML) {
+  closeOverlay();
+  const el = document.createElement('div');
+  el.className = 'crm-overlay';
+  el.id = 'crm-overlay';
+  el.innerHTML = `<div class="crm-modal">${contentHTML}</div>`;
+  el.addEventListener('mousedown', e => { if (e.target === el) closeOverlay(); });
+  document.body.appendChild(el);
+  _activeOverlay = el;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOverlay() {
+  const el = document.getElementById('crm-overlay');
+  if (el) { el.remove(); }
+  _activeOverlay = null;
+  document.body.style.overflow = '';
+}
+
+// ════════════════════════════════
+// DEAL MODAL
+// ════════════════════════════════
+let editingStage = null;
+function openDealModal()           { editingStage=null; _renderDealModal(null); }
+function openDealModalStage(stage) { editingStage=stage; _renderDealModal(null,stage); }
+
+function _renderDealModal(existing, preStage) {
+  const r = existing || {};
+  const stageOpts = STAGES.map(s => `<option value="${s.id}" ${(r.stage||preStage||'new')===s.id?'selected':''}>${s.emoji} ${s.label}</option>`).join('');
+  openOverlay(`
+    <div class="cm-header">
+      <h3>${existing ? '✏️ Edit Deal' : '＋ New Lead / Deal'}</h3>
+      <button class="cm-close" onclick="closeOverlay()">×</button>
+    </div>
+    <div class="cm-body">
+      <input type="hidden" id="dm-id" value="${r.id||''}">
+      <div class="form-row">
+        <div class="fg" style="grid-column:1/-1"><label>Contact Name *</label><input id="dm-name" type="text" value="${r.name||''}" placeholder="Ahmed Mohamed"></div>
+        <div class="fg"><label>Company</label><input id="dm-company" type="text" value="${r.company||''}"></div>
+        <div class="fg"><label>Phone</label><input id="dm-phone" type="text" value="${r.phone||''}"></div>
+        <div class="fg"><label>Email</label><input id="dm-email" type="email" value="${r.email||''}"></div>
+        <div class="fg"><label>Deal Value (EGP)</label><input id="dm-value" type="number" value="${r.value||''}"></div>
+        <div class="fg"><label>Stage</label><select id="dm-stage">${stageOpts}</select></div>
+        <div class="fg"><label>Priority</label>
+          <select id="dm-priority">
+            <option value="high"   ${r.priority==='high'  ?'selected':''}>▲ High</option>
+            <option value="medium" ${r.priority==='medium'?'selected':''}>● Medium</option>
+            <option value="low"    ${r.priority==='low'   ?'selected':''}>▼ Low</option>
+          </select>
+        </div>
+        <div class="fg"><label>Source</label>
+          <select id="dm-source">
+            ${['Referral','Website','Social Media','Cold Call','Exhibition','Other'].map(s=>`<option value="${s.toLowerCase().replace(' ','_')}" ${r.source===s.toLowerCase().replace(' ','_')?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label>Expected Close Date</label><input id="dm-close" type="date" value="${r.closeDate||''}"></div>
+        <div class="fg" style="grid-column:1/-1"><label>Notes</label><textarea id="dm-notes">${r.notes||''}</textarea></div>
+      </div>
+    </div>
+    <div class="cm-footer">
+      ${existing?`<button class="btn btn-danger btn-sm" onclick="confirmDeleteDeal('${r.id}');closeOverlay()">Delete</button>`:''}
+      <button class="btn btn-outline" onclick="closeOverlay()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDealForm(${existing?'true':'false'})">${existing?'Update':'Save Lead'}</button>
+    </div>`);
+}
+
+function openEditModal(id) {
+  const l = leads.find(x => x.id === id);
+  if (l) _renderDealModal(l);
+}
+
+function saveDealForm(isEdit) {
+  const name = document.getElementById('dm-name').value.trim();
+  if (!name) { alert('Contact name is required'); return; }
+  const id = document.getElementById('dm-id').value;
+  const rec = {
+    id:        id || Date.now().toString(),
+    name,
+    company:   document.getElementById('dm-company').value,
+    phone:     document.getElementById('dm-phone').value,
+    email:     document.getElementById('dm-email').value,
+    value:     document.getElementById('dm-value').value,
+    stage:     document.getElementById('dm-stage').value,
+    priority:  document.getElementById('dm-priority').value,
+    source:    document.getElementById('dm-source').value,
+    closeDate: document.getElementById('dm-close').value,
+    notes:     document.getElementById('dm-notes').value,
+    stageDate: isEdit ? (leads.find(x=>x.id===id)?.stageDate || new Date().toISOString()) : new Date().toISOString(),
+    created:   isEdit ? (leads.find(x=>x.id===id)?.created || new Date().toLocaleDateString()) : new Date().toLocaleDateString()
+  };
+  if (isEdit) {
+    const i = leads.findIndex(x => x.id === id); if (i >= 0) leads[i] = rec;
+  } else {
+    leads.push(rec);
+  }
+  saveLeads(); closeOverlay();
+  renderStats(); renderPipeline();
+  if (currentTab === 'leads') renderLeadsTable();
+}
+
+function confirmDeleteDeal(id) {
+  if (!confirm('Delete this lead/deal?')) return;
+  leads = leads.filter(l => l.id !== id);
+  saveLeads(); closeOverlay();
+  renderStats(); renderPipeline();
+  if (currentTab === 'leads') renderLeadsTable();
+}
+
+// ════════════════════════════════
+// ACTIVITY MODAL
+// ════════════════════════════════
+function openActivityModal(existing) {
+  const a = existing || {};
+  const today = new Date().toISOString().slice(0,10);
+  const typeOpts = Object.entries(ACT_TYPES).map(([k,v]) =>
+    `<option value="${k}" ${(a.type||'call')===k?'selected':''}>${v.emoji} ${v.label}</option>`).join('');
+  const leadOpts = '<option value="">— General / No Lead —</option>' +
+    leads.map(l => `<option value="${l.id}" ${a.leadId===l.id?'selected':''}>${l.name}${l.company?' ('+l.company+')':''}</option>`).join('');
+
+  openOverlay(`
+    <div class="cm-header">
+      <h3>${existing ? '✏️ Edit Activity' : '📋 Log Activity'}</h3>
+      <button class="cm-close" onclick="closeOverlay()">×</button>
+    </div>
+    <div class="cm-body">
+      <input type="hidden" id="am-id" value="${a.id||''}">
+      <div class="form-row">
+        <div class="fg"><label>Activity Type</label><select id="am-type">${typeOpts}</select></div>
+        <div class="fg"><label>Related Lead</label><select id="am-lead">${leadOpts}</select></div>
+        <div class="fg" style="grid-column:1/-1"><label>Description *</label><textarea id="am-desc" placeholder="What happened or needs to be done?">${a.desc||''}</textarea></div>
+        <div class="fg"><label>Date</label><input id="am-date" type="date" value="${a.date||today}"></div>
+        <div class="fg"><label>Next Action / Follow-up</label><input id="am-next" type="text" value="${a.next||''}" placeholder="Follow up in 3 days…"></div>
+      </div>
+    </div>
+    <div class="cm-footer">
+      ${existing?`<button class="btn btn-danger btn-sm" onclick="deleteActivity('${a.id}');closeOverlay()">Delete</button>`:''}
+      <button class="btn btn-outline" onclick="closeOverlay()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveActivityForm(${existing?'true':'false'})">Save Activity</button>
+    </div>`);
+}
+
+function openEditActivityModal(id) {
+  const a = activities.find(x => x.id === id);
+  if (a) openActivityModal(a);
+}
+
+function saveActivityForm(isEdit) {
+  const desc = document.getElementById('am-desc').value.trim();
+  if (!desc) { alert('Description is required'); return; }
+  const id     = document.getElementById('am-id').value;
+  const leadId = document.getElementById('am-lead').value;
+  const rec = {
+    id:       id || Date.now().toString(),
+    type:     document.getElementById('am-type').value,
+    desc,
+    leadId,
+    leadName: leadId ? (leads.find(l=>l.id===leadId)?.name||'') : '',
+    date:     document.getElementById('am-date').value,
+    next:     document.getElementById('am-next').value,
+    done:     isEdit ? (activities.find(x=>x.id===id)?.done || false) : false,
+    created:  isEdit ? (activities.find(x=>x.id===id)?.created||new Date().toISOString()) : new Date().toISOString()
+  };
+  if (isEdit) {
+    const i = activities.findIndex(x => x.id === id); if (i >= 0) activities[i] = rec;
+  } else {
+    activities.push(rec);
+  }
+  saveActivities(); closeOverlay();
+  renderActivities(); renderStats();
+  if (currentTab !== 'activities') switchTab('activities');
+}
+
+// ════════════════════════════════
+// CSV EXPORT
+// ════════════════════════════════
+function exportCSV(type) {
+  let rows = [], filename = '';
+  if (type === 'leads') {
+    filename = `optech_leads_${today()}.csv`;
+    rows = [
+      ['#','Name','Company','Phone','Email','Value (EGP)','Stage','Priority','Source','Close Date','Notes','Created'],
+      ...leads.map((l,i) => [
+        i+1, l.name, l.company||'', l.phone||'', l.email||'',
+        l.value||0, STAGES.find(s=>s.id===l.stage)?.label||l.stage,
+        l.priority||'', l.source||'', l.closeDate||'', l.notes||'', l.created||''
+      ])
+    ];
+  } else if (type === 'activities') {
+    filename = `optech_activities_${today()}.csv`;
+    rows = [
+      ['#','Type','Description','Lead','Date','Next Action','Status','Created'],
+      ...activities.map((a,i) => [
+        i+1, ACT_TYPES[a.type]?.label||a.type, a.desc, a.leadName||'',
+        a.date||'', a.next||'', a.done?'Done':'Pending', a.created?a.created.slice(0,10):''
+      ])
+    ];
+  }
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'}));
+  a.download = filename; a.click();
+}
+function today() { return new Date().toISOString().slice(0,10); }
+
+// ════════════════════════════════
+// INIT
+// ════════════════════════════════
+window.onload = initCRM;
+</script>
+</body>
+</html>
