@@ -125,7 +125,7 @@ function openInvoiceModal(existing){
         <table id="inv-items" style="width:calc(100% - 80px);margin:10px 40px;border-collapse:collapse;"><thead><tr><th style="${TH()}width:50%">Description / البيان</th><th style="${TH()}width:10%">Qty</th><th style="${TH()}width:20%">Unit Price</th><th style="${TH()}width:20%">Amount</th></tr></thead><tbody>${items.map(it=>invRowHTML(it.desc,it.qty,it.price)).join('')}</tbody></table>
         <div style="padding:10px 40px;display:flex;justify-content:space-between;">
           <div style="width:55%;"><div style="color:#1A4325;font-weight:700;font-size:13px;margin-bottom:8px;">Terms & Conditions</div><div id="inv-terms">${(rec._terms||['ضمان 3 سنوات من تاريخ التسليم/التركيب.','في حالة الاستبدال أو الاسترجاع يرجى الاحتفاظ بهذه الوثيقة.','الضمان لا يشمل الكسر أو مشاكل التركيب الخاطئ بمعرفة العميل.','الضمان لا يشمل العطب نتيجة مشكلة فنية كهربائية أخرى بالجهاز.']).map(t=>invTermLine(t)).join('')}</div><div class="no-print-in-modal" style="margin-top:5px;"><button onclick="invAddTerm()" style="background:#D6F0E0;border:1px solid #2E7D32;color:#1A4325;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700;">+ Add Term</button></div></div>
-          <div style="width:35%;">${tRow('Subtotal','<span id="inv-sub">0.00</span>')}${tRowCb('inv-tax-cb','VAT (14%)','<span id="inv-tax">0.00</span>',rec._tax!==false)}${tRow('Shipping',numInput('inv-ship',rec._ship||0,'invCalc()'))}${tRowCb('inv-inst-cb','Installation',numInput('inv-inst',rec._instVal||0,'invCalc()'),rec._inst!==false)}${tRowCb('inv-disc-cb','Discount',numInput('inv-disc',rec._discVal||0,'invCalc()'),rec._disc===true)}<div style="display:flex;justify-content:space-between;align-items:center;background:#D6F0E0;padding:8px;margin-top:5px;font-weight:700;font-size:15px;color:#1A4325;"><span id="inv-grand">EGP 0.00</span><span>TOTAL / الإجمالي</span></div></div>
+          <div style="width:35%;">${tRow('Subtotal','<span id="inv-sub">0.00</span>')}<div id="inv-tax-row" class="no-print-in-modal" style="display:${rec._tax!==false?'flex':'none'};justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #eee;font-size:13px;"><span id="inv-tax">0.00</span><label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="inv-tax-cb" ${rec._tax!==false?'checked':''} onchange="invCalc()"> VAT (14%)</label></div>${tRow('Shipping',numInput('inv-ship',rec._ship||0,'invCalc()'))}${tRowCb('inv-inst-cb','Installation',numInput('inv-inst',rec._instVal||0,'invCalc()'),rec._inst!==false)}${tRowCb('inv-disc-cb','Discount',numInput('inv-disc',rec._discVal||0,'invCalc()'),rec._disc===true)}<div style="display:flex;justify-content:space-between;align-items:center;background:#D6F0E0;padding:8px;margin-top:5px;font-weight:700;font-size:15px;color:#1A4325;"><span id="inv-grand">EGP 0.00</span><span>TOTAL / الإجمالي</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:2px solid #ccc;margin-top:8px;font-size:13px;">${numInput('inv-paid',rec._paid||0,'invCalc()')}<span style="font-weight:600;color:#2E7D32;">Paid / المدفوع</span></div><div style="display:flex;justify-content:space-between;align-items:center;background:#fff8e1;padding:8px;margin-top:2px;font-weight:700;font-size:14px;"><span id="inv-balance" style="color:#e65100;">EGP 0.00</span><span style="color:#e65100;">Balance Due / المتبقي</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px dashed #ddd;margin-top:4px;font-size:12px;"><input type="text" id="inv-next-pay" value="${rec._nextPayment||''}" placeholder="Date / Amount" style="width:130px;border:1px solid #ddd;padding:3px 6px;border-radius:4px;text-align:center;font-size:12px;font-family:inherit;"><span style="color:#888;">Next Payment</span></div></div>
         </div>
         <div style="padding:10px 40px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;"><div style="position:relative;width:220px;padding-top:16px;"><img src="Signature.png" alt="" style="width:150px;height:auto;margin-bottom:-10px;position:relative;z-index:1;" onerror="this.style.display='none'"><div style="border-top:2px solid #1A4325;width:100%;padding-top:5px;font-weight:700;font-size:13px;">Authorized Signature</div></div></div>
       </div></div>`);
@@ -137,11 +137,207 @@ function invTermLine(text){ return `<div style="display:flex;align-items:center;
 function invAddRow(){document.querySelector('#inv-items tbody').insertAdjacentHTML('beforeend',invRowHTML('',1,0));}
 function invRemoveRow(){const r=document.querySelectorAll('#inv-items tbody tr');if(r.length>1){r[r.length-1].remove();invCalc();}}
 function invAddTerm(){document.getElementById('inv-terms').insertAdjacentHTML('beforeend',invTermLine(''));}
-function invCalc(){let sub=0;document.querySelectorAll('#inv-items tbody tr').forEach(r=>{const q=parseFloat(r.querySelector('.inv-qty')?.value)||0,p=parseFloat(r.querySelector('.inv-price')?.value)||0,v=q*p;const c=r.querySelector('.inv-total-cell');if(c)c.textContent=v.toLocaleString(undefined,{minimumFractionDigits:2});sub+=v;});const g=id=>document.getElementById(id);const tax=g('inv-tax-cb')?.checked?sub*0.14:0,inst=g('inv-inst-cb')?.checked?(parseFloat(g('inv-inst')?.value)||0):0,disc=g('inv-disc-cb')?.checked?(parseFloat(g('inv-disc')?.value)||0):0,ship=parseFloat(g('inv-ship')?.value)||0,tot=sub+tax+ship+inst-disc,f=n=>n.toLocaleString(undefined,{minimumFractionDigits:2});if(g('inv-sub'))g('inv-sub').textContent=f(sub);if(g('inv-tax'))g('inv-tax').textContent=f(tax);if(g('inv-grand'))g('inv-grand').textContent='EGP '+f(tot);}
-function invCollect(){const raw=document.getElementById('inv-grand')?.textContent||'0';const items=[];document.querySelectorAll('#inv-items tbody tr').forEach(r=>{items.push({desc:r.querySelector('.inv-desc')?.value||'',qty:parseFloat(r.querySelector('.inv-qty')?.value)||0,price:parseFloat(r.querySelector('.inv-price')?.value)||0});});const terms=[];document.querySelectorAll('#inv-terms input[type=text]').forEach(i=>{if(i.value.trim())terms.push(i.value.trim());});const g=id=>document.getElementById(id);return{id:g('inv-no')?.value||String(invNum).padStart(9,'0'),client:g('inv-client')?.value||'Unknown',phone:g('inv-phone')?.value||'',date:g('inv-date')?.value||'',due:g('inv-due')?.value||'',total:parseFloat(raw.replace('EGP ','').replace(/,/g,''))||0,_items:items,_tax:g('inv-tax-cb')?.checked!==false,_ship:parseFloat(g('inv-ship')?.value)||0,_inst:g('inv-inst-cb')?.checked!==false,_instVal:parseFloat(g('inv-inst')?.value)||0,_disc:g('inv-disc-cb')?.checked===true,_discVal:parseFloat(g('inv-disc')?.value)||0,_terms:terms};}
+function invCalc(){let sub=0;document.querySelectorAll('#inv-items tbody tr').forEach(r=>{const q=parseFloat(r.querySelector('.inv-qty')?.value)||0,p=parseFloat(r.querySelector('.inv-price')?.value)||0,v=q*p;const c=r.querySelector('.inv-total-cell');if(c)c.textContent=v.toLocaleString(undefined,{minimumFractionDigits:2});sub+=v;});const g=id=>document.getElementById(id);const taxCb=g('inv-tax-cb');const taxChecked=taxCb?.checked||false;const tax=taxChecked?sub*0.14:0,inst=g('inv-inst-cb')?.checked?(parseFloat(g('inv-inst')?.value)||0):0,disc=g('inv-disc-cb')?.checked?(parseFloat(g('inv-disc')?.value)||0):0,ship=parseFloat(g('inv-ship')?.value)||0,tot=sub+tax+ship+inst-disc,paid=parseFloat(g('inv-paid')?.value)||0,balance=tot-paid,f=n=>n.toLocaleString(undefined,{minimumFractionDigits:2});if(g('inv-sub'))g('inv-sub').textContent=f(sub);if(g('inv-tax'))g('inv-tax').textContent=f(tax);if(g('inv-grand'))g('inv-grand').textContent='EGP '+f(tot);const taxRow=g('inv-tax-row');if(taxRow)taxRow.style.display=taxChecked?'flex':'none';if(g('inv-balance')){g('inv-balance').textContent='EGP '+f(balance);g('inv-balance').style.color=balance<=0?'#2E7D32':'#e65100';}}
+function invCollect(){const raw=document.getElementById('inv-grand')?.textContent||'0';const items=[];document.querySelectorAll('#inv-items tbody tr').forEach(r=>{items.push({desc:r.querySelector('.inv-desc')?.value||'',qty:parseFloat(r.querySelector('.inv-qty')?.value)||0,price:parseFloat(r.querySelector('.inv-price')?.value)||0});});const terms=[];document.querySelectorAll('#inv-terms input[type=text]').forEach(i=>{if(i.value.trim())terms.push(i.value.trim());});const g=id=>document.getElementById(id);return{id:g('inv-no')?.value||String(invNum).padStart(9,'0'),client:g('inv-client')?.value||'Unknown',phone:g('inv-phone')?.value||'',date:g('inv-date')?.value||'',due:g('inv-due')?.value||'',total:parseFloat(raw.replace('EGP ','').replace(/,/g,''))||0,_items:items,_tax:g('inv-tax-cb')?.checked!==false,_ship:parseFloat(g('inv-ship')?.value)||0,_inst:g('inv-inst-cb')?.checked!==false,_instVal:parseFloat(g('inv-inst')?.value)||0,_disc:g('inv-disc-cb')?.checked===true,_discVal:parseFloat(g('inv-disc')?.value)||0,_paid:parseFloat(g('inv-paid')?.value)||0,_nextPayment:g('inv-next-pay')?.value||'',_terms:terms};}
 function _pushInvoice(rec){const i=db.invoices.findIndex(x=>x.id===rec.id);if(i>=0)db.invoices[i]=rec;else db.invoices.push(rec);saveDB('invoices');_refreshView();}
 function invSaveOnly(btn){_pushInvoice(invCollect());if(btn){btn.textContent='Saved!';btn.style.background='#2E7D32';setTimeout(()=>{btn.textContent='Save Only';btn.style.background='#e65100';},2000);}}
-function invSaveAndPrint(){const rec=invCollect();_pushInvoice(rec);const orig=document.title;document.title=`${rec.client}_Invoice_${rec.id}_${rec.date}`;printModal('invoice-modal-card');document.title=orig;}
+function invSaveAndPrint(){
+    const rec=invCollect();
+    _pushInvoice(rec);
+    localStorage.setItem('currentInvoiceId', rec.id);
+    
+    // Store the current invoice data for printing
+    localStorage.setItem('printInvoiceData', JSON.stringify(rec));
+    
+    // Create a hidden iframe and load the invoice for direct printing
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'INVOICE.html?id=' + rec.id + '&print=true';
+    document.body.appendChild(iframe);
+    
+    // When the iframe loads, trigger print
+    iframe.onload = function() {
+        setTimeout(() => {
+            iframe.contentWindow.print();
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500);
+    };
+}
+
+function printInvoiceDirect(invoiceId) {
+    const invoice = db.invoices.find(inv => inv.id === invoiceId);
+    if (!invoice) {
+        alert('Invoice not found!');
+        return;
+    }
+    
+    // Store invoice data for printing
+    localStorage.setItem('printInvoiceData', JSON.stringify(invoice));
+    
+    // Create a hidden iframe and load the invoice
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'INVOICE.html?id=' + invoiceId + '&print=true';
+    document.body.appendChild(iframe);
+    
+    // When the iframe loads, trigger print
+    iframe.onload = function() {
+        setTimeout(() => {
+            iframe.contentWindow.print();
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500);
+    };
+}
+
+function printInvoiceInline(invoiceId) {
+    console.log('printInvoiceInline called with ID:', invoiceId);
+    const invoice = db.invoices.find(inv => inv.id === invoiceId);
+    console.log('Found invoice:', invoice);
+    if (!invoice) {
+        alert('Invoice not found!');
+        return;
+    }
+    
+    // Generate invoice HTML directly
+    const itemsHTML = invoice._items.map(item => `
+        <tr>
+            <td><input type="text" value="${item.desc || ''}" readonly style="width:100%;border:none;background:transparent;padding:5px;font-size:13px;"></td>
+            <td><input type="number" value="${item.qty || 1}" readonly style="width:100%;border:none;background:transparent;padding:5px;font-size:13px;text-align:center;"></td>
+            <td><input type="number" value="${item.price || 0}" readonly style="width:100%;border:none;background:transparent;padding:5px;font-size:13px;text-align:center;"></td>
+            <td style="padding:5px;text-align:center;font-weight:700;">${((item.qty || 1) * (item.price || 0)).toFixed(2)}</td>
+        </tr>
+    `).join('');
+    
+    const invoiceHTML = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>${invoice.client}_Invoice_${invoice.id}_${invoice.date}</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; background: #e0e0e0; }
+                .invoice-card { 
+                    background: #fff; 
+                    width: 850px; 
+                    margin: 0 auto; 
+                    border: 1px solid #ccc;
+                    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+                    padding: 20px;
+                }
+                .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+                .company-info h2 { color: #1A4325; margin: 0; }
+                .invoice-title { text-align: center; font-size: 24px; font-weight: bold; color: #1A4325; }
+                .invoice-details { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                .bill-to h3 { color: #1A4325; margin-bottom: 10px; }
+                .meta-data { text-align: right; }
+                .meta-row { margin-bottom: 10px; }
+                .meta-row input { border: none; background: transparent; font-size: 14px; font-weight: bold; }
+                .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .items-table th { background: #1A4325; color: white; padding: 10px; text-align: center; border: 1px solid #ccc; }
+                .items-table td { padding: 10px; border: 1px solid #ccc; }
+                .totals { text-align: right; margin-top: 20px; }
+                .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                .grand-total { font-weight: bold; font-size: 18px; color: #1A4325; }
+                @media print {
+                    body { margin: 0; padding: 0; background: #fff; }
+                    .invoice-card { box-shadow: none; border: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="invoice-card">
+                <div class="header">
+                    <div class="company-info">
+                        <h2>Optech IT Solutions</h2>
+                        <p>21/2 Oriana Mall, El Mokattam<br>Mokattam • 11693 • Cairo<br>+20 1121450646 • info@optech-eg.com</p>
+                    </div>
+                    <div class="invoice-title">INVOICE</div>
+                </div>
+                
+                <div class="invoice-details">
+                    <div class="bill-to">
+                        <h3>Bill to / فاتورة إلى</h3>
+                        <div>${invoice.client}</div>
+                        <div>${invoice.phone || ''}</div>
+                    </div>
+                    <div class="meta-data">
+                        <div class="meta-row">
+                            <input type="text" value="${invoice.id}" readonly>
+                            <label>Invoice No</label>
+                        </div>
+                        <div class="meta-row">
+                            <input type="text" value="${invoice.date}" readonly>
+                            <label>Invoice Date</label>
+                        </div>
+                        <div class="meta-row">
+                            <input type="text" value="${invoice.due || ''}" readonly>
+                            <label>Due Date</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Description / البيان</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHTML}
+                    </tbody>
+                </table>
+                
+                <div class="totals">
+                    <div class="total-row">
+                        <span>Sub Total</span>
+                        <span>${invoice.total ? invoice.total.toLocaleString() : '0.00'}</span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span>Grand Total</span>
+                        <span>EGP ${invoice.total ? invoice.total.toLocaleString() : '0.00'}</span>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    // Create print modal
+    const modalContent = `
+        <div id="invoice-print-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;">
+            <div style="background:white;width:95%;max-width:1000px;height:95%;overflow:auto;border-radius:8px;box-shadow:0 0 20px rgba(0,0,0,0.3);position:relative;">
+                <div style="position:absolute;top:10px;right:10px;z-index:10000;">
+                    <button onclick="document.getElementById('invoice-print-modal').remove()" style="background:#c62828;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;font-size:14px;">✕ Close</button>
+                    <button onclick="printInvoiceContent()" style="background:#1A4325;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;font-size:14px;margin-left:10px;">🖨️ Print</button>
+                </div>
+                <div id="invoice-content" style="padding:20px;">
+                    ${invoiceHTML}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add print function
+    window.printInvoiceContent = function() {
+        const content = document.getElementById('invoice-content').innerHTML;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(content);
+        printWindow.document.close();
+        printWindow.print();
+    };
+    
+    // Add to page
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+}
 
 // ═══════════════════════════════════════════
 // ██  RECEIPT MODAL
@@ -164,6 +360,7 @@ function openReceiptModal(existing){
         <div style="padding:36px 50px;display:flex;flex-direction:column;gap:22px;">
           <div style="display:flex;align-items:center;gap:15px;"><span style="font-family:'Times New Roman',serif;font-size:17px;font-weight:700;color:#1A4325;min-width:160px;">Date of Issue:</span><div style="display:flex;align-items:center;gap:8px;font-weight:700;"><input id="rec-d" type="text" value="${dd}" style="${DI('52px')}"> / <input id="rec-m" type="text" value="${mm}" style="${DI('52px')}"> / <input id="rec-y" type="text" value="${yy}" style="${DI('78px')}"></div></div>
           ${recFld('Received From:','rec-from',rec.from||'','rtl')}
+          <div style="display:flex;gap:36px;">${recFld('Phone:','rec-phone',rec.phone||'','',true)}${recFld('Email:','rec-email',rec.email||'','',true)}</div>
           <div style="display:flex;gap:36px;">${recFld('Amount:','rec-amount',rec.amount||'','',true)}${recFld('Payment Method:','rec-method',rec.method||'','',true)}</div>
           ${recFld('Description:','rec-desc',rec.desc||'','rtl')}
         </div>
@@ -172,10 +369,33 @@ function openReceiptModal(existing){
       </div></div>`);
 }
 function recFld(label,id,val,dir,flex){ return `<div style="display:flex;align-items:center;gap:15px;${flex?'flex:1;':''}"><span style="font-family:'Times New Roman',serif;font-size:17px;font-weight:700;color:#1A4325;white-space:nowrap;">${label}</span><input id="${id}" type="text" value="${(val||'').replace(/"/g,'&quot;')}" dir="${dir||''}" style="flex:1;background:transparent;border:none;border-bottom:1.5px solid #ccc;height:34px;padding:0 8px;font-size:17px;outline:none;font-family:inherit;${dir==='rtl'?'text-align:right;':''}"></div>`; }
-function recCollect(){ const g=id=>document.getElementById(id); return{id:document.getElementById('receipt-modal-card')?.querySelector('strong')?.textContent||String(recNum).padStart(6,'0'),from:g('rec-from')?.value||'Unknown',amount:g('rec-amount')?.value||'0',method:g('rec-method')?.value||'',desc:g('rec-desc')?.value||'',date:`${g('rec-d')?.value||''}/${g('rec-m')?.value||''}/${g('rec-y')?.value||''}`}; }
+function recCollect(){ const g=id=>document.getElementById(id); return{id:document.getElementById('receipt-modal-card')?.querySelector('strong')?.textContent||String(recNum).padStart(6,'0'),from:g('rec-from')?.value||'Unknown',phone:g('rec-phone')?.value||'',email:g('rec-email')?.value||'',amount:g('rec-amount')?.value||'0',method:g('rec-method')?.value||'',desc:g('rec-desc')?.value||'',date:`${g('rec-d')?.value||''}/${g('rec-m')?.value||''}/${g('rec-y')?.value||''}`}; }
 function _pushReceipt(rec){const i=db.receipts.findIndex(x=>x.id===rec.id);if(i>=0)db.receipts[i]=rec;else db.receipts.push(rec);saveDB('receipts');_refreshView();}
 function recSaveOnly(btn){_pushReceipt(recCollect());if(btn){btn.textContent='Saved!';btn.style.background='#2E7D32';setTimeout(()=>{btn.textContent='Save Only';btn.style.background='#e65100';},2000);}}
-function recSaveAndPrint(){const rec=recCollect();_pushReceipt(rec);const orig=document.title;document.title=`${rec.from}_Receipt_${rec.id}_${rec.date}`;printModal('receipt-modal-card');document.title=orig;}
+function recSaveAndPrint(){
+    const rec=recCollect();
+    _pushReceipt(rec);
+    
+    // Store the receipt data for printing
+    localStorage.setItem('printReceiptData', JSON.stringify(rec));
+    
+    // Create a hidden iframe and load the receipt for direct printing
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'Cash-Recipt.html?id=' + rec.id + '&print=true';
+    document.body.appendChild(iframe);
+    
+    // When the iframe loads, trigger print
+    iframe.onload = function() {
+        setTimeout(() => {
+            iframe.contentWindow.print();
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500);
+    };
+}
 
 // ═══════════════════════════════════════════
 // ██  QUOTATION MODAL
@@ -203,8 +423,9 @@ function openQuotationModal(existing){
     ['q-tax-cb','q-inst-cb','q-disc-cb'].forEach(id=>{const el=document.getElementById(id);if(el)el.onchange=qCalc;});
     qCalc();
 }
-function qRowHTML(it){it=it||{};const inS=`width:100%;border:none;padding:5px;font-size:12px;background:#f9f9f9;border-radius:3px;font-family:inherit;`;const imgPrev=it.imgBase64?`<img src="${it.imgBase64}" style="width:60px;height:50px;object-fit:cover;border-radius:3px;display:block;margin-bottom:4px;">`:'<div style="width:60px;height:50px;border:2px dashed #ddd;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;text-align:center;margin-bottom:4px;">No image</div>';return `<tr class="q-item-row"><td style="${TD()}text-align:center;vertical-align:top;padding:6px;"><div class="q-img-preview">${imgPrev}</div><label class="no-print-in-modal" style="cursor:pointer;"><span style="font-size:10px;color:#1A4325;text-decoration:underline;">Upload</span><input type="file" accept="image/*" class="q-img-input" onchange="qHandleImage(this)" style="display:none;"></label><input type="hidden" class="q-img-data" value="${it.imgBase64||''}"></td><td style="${TD()}vertical-align:top;"><input type="text" class="q-desc" value="${(it.desc||'').replace(/"/g,'&quot;')}" placeholder="Product name..." style="${inS}text-align:right;"></td><td style="${TD()}vertical-align:top;"><textarea class="q-spec" placeholder="Specifications..." rows="2" style="${inS}resize:vertical;min-height:40px;text-align:right;">${it.spec||''}</textarea></td><td style="${TD()}vertical-align:top;"><input type="number" class="q-qty" value="${it.qty||1}" oninput="qCalc()" style="${inS}text-align:center;"></td><td style="${TD()}vertical-align:top;"><input type="number" class="q-price" value="${it.price||0}" oninput="qCalc()" style="${inS}text-align:center;"></td><td class="q-total-cell" style="${TD()}font-weight:700;text-align:center;font-size:13px;vertical-align:top;padding-top:12px;">0.00</td><td class="no-print-in-modal" style="${TD()}text-align:center;vertical-align:top;"><button onclick="this.closest('tr').remove();qCalc();" style="background:none;border:none;color:#f44336;cursor:pointer;font-size:18px;line-height:1;padding:4px;">×</button></td></tr>`;}
-function qHandleImage(input){const row=input.closest('tr.q-item-row');if(!row||!input.files[0])return;const reader=new FileReader();reader.onload=e=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');const maxW=200,maxH=160;let w=img.width,h=img.height;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);const small=canvas.toDataURL('image/jpeg',0.7);row.querySelector('.q-img-data').value=small;row.querySelector('.q-img-preview').innerHTML=`<img src="${small}" style="width:60px;height:50px;object-fit:cover;border-radius:3px;display:block;margin-bottom:4px;">`;};img.src=e.target.result;};reader.readAsDataURL(input.files[0]);}
+function qRowHTML(it){it=it||{};const inS=`width:100%;border:none;padding:5px;font-size:12px;background:#f9f9f9;border-radius:3px;font-family:inherit;`;const imgPrev=it.imgBase64?`<img src="${it.imgBase64}" style="width:120px;height:100px;object-fit:cover;border-radius:3px;display:block;margin-bottom:4px;">`:'<div style="width:120px;height:100px;border:2px dashed #ddd;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;text-align:center;margin-bottom:4px;">No image</div>';return `<tr class="q-item-row"><td style="${TD()}text-align:center;vertical-align:top;padding:6px;"><div class="q-img-preview">${imgPrev}</div><label class="no-print-in-modal" style="cursor:pointer;"><span style="font-size:10px;color:#1A4325;text-decoration:underline;">Upload</span><input type="file" accept="image/*" class="q-img-input" onchange="qHandleImage(this)" style="display:none;"></label><input type="hidden" class="q-img-data" value="${it.imgBase64||''}"></td><td style="${TD()}vertical-align:top;"><input type="text" class="q-desc" value="${(it.desc||'').replace(/"/g,'&quot;')}" placeholder="Product name..." style="${inS}text-align:right;"></td><td style="${TD()}vertical-align:top;"><textarea class="q-spec" placeholder="Specifications..." rows="2" style="${inS}resize:vertical;min-height:40px;text-align:right;">${it.spec||''}</textarea></td><td style="${TD()}vertical-align:top;"><input type="number" class="q-qty" value="${it.qty||1}" oninput="qCalc()" style="${inS}text-align:center;"></td><td style="${TD()}vertical-align:top;"><input type="number" class="q-price" value="${it.price||0}" oninput="qCalc()" style="${inS}text-align:center;"></td><td class="q-total-cell" style="${TD()}font-weight:700;text-align:center;font-size:13px;vertical-align:top;padding-top:12px;">0.00</td><td class="no-print-in-modal" style="${TD()}text-align:center;vertical-align:top;"><button onclick="this.closest('tr').remove();qCalc();" style="background:none;border:none;color:#f44336;cursor:pointer;font-size:18px;line-height:1;padding:4px;">×</button></td></tr>`;}
+function qHandleImage(input){const row=input.closest('tr.q-item-row');if(!row||!input.files[0])return;const reader=new FileReader();reader.onload=e=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');const maxW=400,maxH=300;let w=img.width,h=img.height;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);const small=canvas.toDataURL('image/jpeg',0.7);row.querySelector('.q-img-data').value=small;row.querySelector('.q-img-preview').innerHTML=`<img src="${small}" style="width:120px;height:100px;object-fit:cover;border-radius:3px;display:block;margin-bottom:4px;">`;};img.src=e.target.result;};reader.readAsDataURL(input.files[0]);}
+function qDeleteImage(btn){const row=btn.closest('tr.q-item-row');if(!row)return;row.querySelector('.q-img-data').value='';row.querySelector('.q-img-preview').innerHTML='<div style="width:120px;height:100px;border:2px dashed #ddd;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;text-align:center;margin-bottom:4px;">No image</div>';}
 function qTermLine(text){return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;"><button class="no-print-in-modal" onclick="this.parentElement.remove()" style="background:none;border:none;color:#f44336;cursor:pointer;font-size:13px;padding:0 2px;">×</button><span style="color:#999;">•</span><input type="text" value="${(text||'').replace(/"/g,'&quot;')}" style="border:none;background:transparent;width:100%;font-size:11px;color:#555;padding:2px;font-family:inherit;outline:none;"></div>`;}
 function qAddRow(){document.querySelector('#q-items tbody').insertAdjacentHTML('beforeend',qRowHTML({}));qCalc();}
 function qRemoveRow(){const r=document.querySelectorAll('#q-items tbody tr');if(r.length>1){r[r.length-1].remove();qCalc();}}
@@ -213,7 +434,30 @@ function qCalc(){let sub=0;document.querySelectorAll('#q-items tbody tr').forEac
 function qCollect(){const raw=document.getElementById('q-grand')?.textContent||'0';const items=[];document.querySelectorAll('#q-items tbody tr').forEach(r=>{items.push({desc:r.querySelector('.q-desc')?.value||'',spec:r.querySelector('.q-spec')?.value||'',imgBase64:r.querySelector('.q-img-data')?.value||'',qty:parseFloat(r.querySelector('.q-qty')?.value)||0,price:parseFloat(r.querySelector('.q-price')?.value)||0});});const terms=[];document.querySelectorAll('#q-terms input[type=text]').forEach(i=>{if(i.value.trim())terms.push(i.value.trim());});const g=id=>document.getElementById(id);return{id:g('q-no')?.value||'QUO-'+String(qNum).padStart(6,'0'),client:g('q-client')?.value||'Unknown',phone:g('q-phone')?.value||'',email:g('q-email')?.value||'',date:g('q-date')?.value||'',validUntil:g('q-valid')?.value||'',preparedBy:g('q-by')?.value||'',total:parseFloat(raw.replace('EGP ','').replace(/,/g,''))||0,status:'pending',_items:items,_tax:g('q-tax-cb')?.checked!==false,_ship:parseFloat(g('q-ship')?.value)||0,_inst:g('q-inst-cb')?.checked!==false,_instVal:parseFloat(g('q-inst')?.value)||0,_disc:g('q-disc-cb')?.checked===true,_discVal:parseFloat(g('q-disc')?.value)||0,_terms:terms};}
 function _pushQuotation(rec){const i=db.quotations.findIndex(x=>x.id===rec.id);if(i>=0)db.quotations[i]=rec;else db.quotations.push(rec);saveDB('quotations');_refreshView();}
 function qSaveOnly(btn){_pushQuotation(qCollect());if(btn){btn.textContent='Saved!';btn.style.background='#2E7D32';setTimeout(()=>{btn.textContent='Save Only';btn.style.background='#e65100';},2000);}}
-function qSaveAndPrint(){const rec=qCollect();_pushQuotation(rec);const orig=document.title;document.title=`${rec.client}_Quotation_${rec.id}_${rec.date}`;printModal('quotation-modal-card');document.title=orig;}
+function qSaveAndPrint(){
+    const rec=qCollect();
+    _pushQuotation(rec);
+    
+    // Store the quotation data for printing
+    localStorage.setItem('printQuotationData', JSON.stringify(rec));
+    
+    // Create a hidden iframe and load the quotation for direct printing
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'QUOTATION.html?id=' + rec.id + '&print=true';
+    document.body.appendChild(iframe);
+    
+    // When the iframe loads, trigger print
+    iframe.onload = function() {
+        setTimeout(() => {
+            iframe.contentWindow.print();
+            // Remove iframe after printing
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500);
+    };
+}
 
 // ═══════════════════════════════════════════
 // LIVE VIEW REFRESH
@@ -262,29 +506,19 @@ function renderDashboard(container){
         </div>`;
     initChart();
 }
-function initChart(){const ctx=document.getElementById('mainChart');if(!ctx)return;new Chart(ctx,{type:'doughnut',data:{labels:['Invoices','Receipts','Quotations','Leads'],datasets:[{data:[db.invoices.length||0,db.receipts.length||0,db.quotations.length||0,(db.leads||[]).length||0],backgroundColor:['#1A4325','#4CAF50','#ffa000','#1565C0'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom'}}}});}
-
-// ═══════════════════════════════════════════
-// INVOICES PAGE
-// ═══════════════════════════════════════════
-function renderInvoices(container){container.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h1>Invoice Management</h1><button class="btn-primary" onclick="openInvoiceModal()">+ New Invoice</button></div><table class="data-table"><thead><tr><th>#</th><th>Client</th><th>Date</th><th>Total</th><th>Actions</th></tr></thead><tbody>${db.invoices.map(inv=>`<tr><td>${inv.id}</td><td>${inv.client}</td><td>${inv.date}</td><td>${parseFloat(inv.total).toLocaleString()} EGP</td><td style="display:flex;gap:6px;"><button style="background:#1565C0;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="openInvoiceModal(db.invoices.find(x=>x.id==='${inv.id}'))">View / Edit</button><button style="background:#c62828;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="deleteRecord('invoices','${inv.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:30px;color:#aaa;">Click "+ New Invoice" to get started</td></tr>'}</tbody></table>`;}
-
-// ═══════════════════════════════════════════
-// RECEIPTS PAGE
-// ═══════════════════════════════════════════
-function renderReceipts(container){container.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h1>Cash Receipts</h1><button class="btn-primary" onclick="openReceiptModal()">+ New Receipt</button></div><table class="data-table"><thead><tr><th>Ref No.</th><th>Received From</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead><tbody>${db.receipts.map(rec=>`<tr><td>${rec.id}</td><td>${rec.from}</td><td>${rec.amount}</td><td>${rec.date}</td><td style="display:flex;gap:6px;"><button style="background:#1565C0;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="openReceiptModal(db.receipts.find(x=>x.id==='${rec.id}'))">View / Edit</button><button style="background:#c62828;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="deleteRecord('receipts','${rec.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:30px;color:#aaa;">No receipts yet</td></tr>'}</tbody></table>`;}
 
 // ═══════════════════════════════════════════
 // QUOTATIONS PAGE
 // ═══════════════════════════════════════════
 const STATUS_LABELS={pending:'Pending',approved:'Approved',rejected:'Rejected',converted:'Converted'};
 const STATUS_COLORS={pending:'#888',approved:'#2E7D32',rejected:'#c62828',converted:'#1565C0'};
-function renderQuotations(container){container.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h1>Quotations / عروض الأسعار</h1><button class="btn-primary" onclick="openQuotationModal()">+ New Quotation</button></div><table class="data-table"><thead><tr><th>#</th><th>Client</th><th>Date</th><th>Valid Until</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>${db.quotations.map(q=>`<tr><td>${q.id}</td><td>${q.client}</td><td>${q.date}</td><td>${q.validUntil||'—'}</td><td>${parseFloat(q.total||0).toLocaleString()} EGP</td><td><select onchange="updateQuotationStatus('${q.id}',this.value)" style="border:1px solid #ddd;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;color:${STATUS_COLORS[q.status||'pending']};">${Object.keys(STATUS_LABELS).map(k=>`<option value="${k}" ${q.status===k?'selected':''}>${STATUS_LABELS[k]}</option>`).join('')}</select></td><td style="display:flex;gap:6px;"><button style="background:#1565C0;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="openQuotationModal(db.quotations.find(x=>x.id==='${q.id}'))">View / Edit</button><button style="background:#c62828;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="deleteRecord('quotations','${q.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:30px;color:#aaa;">No quotations yet</td></tr>'}</tbody></table>`;}
+function renderInvoices(container){container.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h1>Invoice Management</h1><button class="btn-primary" onclick="openInvoiceModal()">+ New Invoice</button></div><table class="data-table"><thead><tr><th>#</th><th>Client</th><th>Date</th><th>Total</th><th>Actions</th></tr></thead><tbody>${db.invoices.map(inv=>`<tr><td>${inv.id}</td><td>${inv.client}</td><td>${inv.date}</td><td>${parseFloat(inv.total).toLocaleString()} EGP</td><td style="display:flex;gap:6px;"><button style="background:#1565C0;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="openInvoiceModal(db.invoices.find(x=>x.id==='${inv.id}'))">View / Edit</button><button style="background:#4CAF50;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="printInvoiceDirect('${inv.id}')">Print</button><button style="background:#c62828;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="setTimeout(() => deleteRecord('invoices','${inv.id}'), 0)">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:30px;color:#aaa;">Click "+ New Invoice" to get started</td></tr>'}</tbody></table>`;}
+function renderQuotations(container){container.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h1>Quotations / \u0639\u0631\u0648\u0636 \u0627\u0644\u0623\u0633\u0639\u0627\u0631</h1><button class="btn-primary" onclick="openQuotationModal()">+ New Quotation</button></div><table class="data-table"><thead><tr><th>#</th><th>Client</th><th>Date</th><th>Valid Until</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>${db.quotations.map(q=>`<tr><td>${q.id}</td><td>${q.client}</td><td>${q.date}</td><td>${q.validUntil||'—'}</td><td>${parseFloat(q.total||0).toLocaleString()} EGP</td><td><select onchange="updateQuotationStatus('${q.id}',this.value)" style="border:1px solid #ddd;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;color:${STATUS_COLORS[q.status||'pending']};">${Object.keys(STATUS_LABELS).map(k=>`<option value="${k}" ${q.status===k?'selected':''}>${STATUS_LABELS[k]}</option>`).join('')}</select></td><td style="display:flex;gap:6px;"><button style="background:#1565C0;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="openQuotationModal(db.quotations.find(x=>x.id==='${q.id}'))">View / Edit</button><button style="background:#c62828;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="deleteRecord('quotations','${q.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:30px;color:#aaa;">No quotations yet</td></tr>'}</tbody></table>`;}
 function updateQuotationStatus(id,status){const q=db.quotations.find(x=>x.id===id);if(q){q.status=status;saveDB('quotations');}}
 
-// ═══════════════════════════════════════════
-// CUSTOMERS
-// ═══════════════════════════════════════════
+function renderReceipts(container){container.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h1>Cash Receipts</h1><button class="btn-primary" onclick="openReceiptModal()">+ New Receipt</button></div><table class="data-table"><thead><tr><th>Ref No.</th><th>Received From</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead><tbody>${db.receipts.map(rec=>`<tr><td>${rec.id}</td><td>${rec.from}</td><td>${rec.amount}</td><td>${rec.date}</td><td style="display:flex;gap:6px;"><button style="background:#1565C0;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="openReceiptModal(db.receipts.find(x=>x.id==='${rec.id}'))">View / Edit</button><button style="background:#c62828;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="deleteRecord('receipts','${rec.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:30px;color:#aaa;">No receipts yet</td></tr>'}</tbody></table>`;}
+
+// ... (rest of the code remains the same)
 function renderCustomers(container){container.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h1>Customer Database</h1><div style="display:flex;gap:8px;"><button style="background:white;color:var(--primary-green);border:1.5px solid var(--primary-green);padding:10px 16px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:600;" onclick="exportCustomersCSV()">⬇ Export CSV</button><button class="btn-primary" onclick="showAddCustomerForm()">+ Add Customer</button></div></div><div id="customer-form-area"></div><table class="data-table" id="customers-table"><thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Company</th><th>City</th><th>Actions</th></tr></thead><tbody>${renderCustomerRows()}</tbody></table>`;}
 function renderCustomerRows(){if(!db.customers.length)return'<tr><td colspan="7" style="text-align:center;padding:30px;color:#aaa;">No customers yet</td></tr>';return db.customers.map((c,i)=>`<tr><td>${i+1}</td><td>${c.name}</td><td>${c.phone||'—'}</td><td>${c.email||'—'}</td><td>${c.company||'—'}</td><td>${c.city||'—'}</td><td><button style="background:#c62828;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;" onclick="deleteCustomer(${i})">Delete</button></td></tr>`).join('');}
 function showAddCustomerForm(){document.getElementById('customer-form-area').innerHTML=`<div style="background:var(--card-bg,white);padding:22px;border-radius:8px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.07);"><h3 style="margin-bottom:14px;color:var(--primary-green);">New Customer</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">${[['c-name','Full Name *'],['c-phone','Phone'],['c-email','Email'],['c-company','Company'],['c-city','City'],['c-notes','Notes']].map(([id,lbl])=>`<div><label style="font-size:12px;color:#666;">${lbl}</label><input id="${id}" type="text" style="width:100%;border:1px solid #ddd;padding:8px;border-radius:4px;margin-top:3px;"></div>`).join('')}</div><div style="margin-top:14px;display:flex;gap:10px;"><button class="btn-primary" onclick="saveCustomer()">Save Customer</button><button style="background:white;border:1px solid #ccc;padding:10px 18px;border-radius:4px;cursor:pointer;" onclick="document.getElementById('customer-form-area').innerHTML=''">Cancel</button></div></div>`;}
@@ -711,7 +945,21 @@ function clearAllData(){if(!confirm('Delete ALL data permanently?'))return;if(!c
 // ═══════════════════════════════════════════
 // SHARED UTILS
 // ═══════════════════════════════════════════
-function deleteRecord(collection,id){if(!confirm('Delete this record?'))return;db[collection]=db[collection].filter(r=>r.id!==id);saveDB(collection);logActivity('delete', `Deleted record from ${collection}`);showSection(collection);}
+function deleteRecord(collection,id){
+    console.log('deleteRecord called with collection:', collection, 'id:', id);
+    if(!confirm('Delete this record?'))return;
+    
+    try {
+        db[collection]=db[collection].filter(r=>r.id!==id);
+        saveDB(collection);
+        logActivity('delete', `Deleted record from ${collection}`);
+        _refreshView();
+        console.log('Record deleted successfully');
+    } catch (error) {
+        console.error('Error deleting record:', error);
+        alert('Error deleting record: ' + error.message);
+    }
+}
 function exportData(){exportAllData();}
 
 function logActivity(type, description){

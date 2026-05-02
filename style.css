@@ -41,6 +41,7 @@ body {
     z-index: 9999;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 .sidebar-logo {
     padding: 20px;
@@ -52,6 +53,11 @@ body {
     height: auto !important;
     display: block;
     margin: 0 auto 8px !important;
+}
+.nav {
+    flex: 1;
+    padding: 10px 0;
+    overflow-y: auto;
 }
 .nav-item {
     padding: 14px 22px;

@@ -273,6 +273,11 @@ app.use('/api/*', (req, res) => {
     res.status(404).json({ ok: false, error: 'API endpoint not found' });
 });
 
+// Catch-all route to serve frontend (for Render.com)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
     console.log('');

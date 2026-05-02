@@ -25,7 +25,7 @@
             body { padding: 0 !important; background: #fff !important; }
             .actions { display: none !important; }
             .card { border: none !important; box-shadow: none !important; width: 100% !important; }
-        }
+                    }
 
         body { font-family: var(--font-sans); background: #d1d1d1; padding: 40px; color: #333; }
         
@@ -173,6 +173,17 @@
 
         <div class="half-row">
             <div class="row" style="flex: 1;">
+                <span class="lbl">Phone:</span>
+                <input class="field" id="phoneField" type="text" placeholder="Phone Number">
+            </div>
+            <div class="row" style="flex: 1;">
+                <span class="lbl">Email:</span>
+                <input class="field" id="emailField" type="text" placeholder="Email Address">
+            </div>
+        </div>
+
+        <div class="half-row">
+            <div class="row" style="flex: 1;">
                 <span class="lbl">Amount:</span>
                 <input class="field" id="amountField" type="text" placeholder="USD / EGP">
             </div>
@@ -195,7 +206,9 @@
         </div>
         <div>
             <span class="lbl" style="display: block; text-align: center;">Official Stamp</span>
-            <div style="border: 1px dashed #ccc; width: 120px; height: 120px; margin: 10px auto; border-radius: 50%;"></div>
+            <div style="border: 1px dashed #ccc; width: 150px; height: 150px; margin: 10px auto; border-radius: 50%; position: relative;">
+                <img src="optech_stamp.png" alt="Optech Stamp" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">
+            </div>
         </div>
     </div>
 
@@ -209,7 +222,7 @@
 
 <div class="actions">
     <button class="btn btn-new" onclick="createNewReceipt()">Generate New Receipt</button>
-    <button class="btn btn-print" onclick="window.print()">Print Document</button>
+    <button class="btn btn-print" onclick="prepareAndPrint()">Print Document</button>
 </div>
 
 <script>
@@ -231,15 +244,88 @@
         localStorage.setItem('lastReceiptNum', currentNumber);
         updateDisplay();
         document.getElementById('fromField').value = '';
+        document.getElementById('phoneField').value = '';
+        document.getElementById('emailField').value = '';
         document.getElementById('amountField').value = '';
         document.getElementById('checkField').value = '';
         document.getElementById('forField').value = '';
         setDate();
     }
 
+    function prepareAndPrint() {
+        const refNo  = document.getElementById('numDisplay').textContent || '000000';
+        const from   = (document.getElementById('fromField').value || 'Client').trim().replace(/\s+/g, '_');
+        const day    = document.getElementById('day').value   || '00';
+        const month  = document.getElementById('month').value || '00';
+        const year   = document.getElementById('year').value  || '0000';
+        const dateStr = `${day}${month}${year}`;
+        const filename = `REC-${refNo}_${from}_${dateStr}`;
+        const originalTitle = document.title;
+        document.title = filename;
+        window.print();
+        setTimeout(() => { document.title = originalTitle; }, 1000);
+    }
+
+    function loadReceiptData() {
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const receiptId = urlParams.get('id');
+        const isPrintMode = urlParams.get('print') === 'true';
+        
+        // Try to get receipt data from localStorage (for direct printing)
+        const printData = localStorage.getItem('printReceiptData');
+        
+        if (printData) {
+            try {
+                const receipt = JSON.parse(printData);
+                populateReceiptData(receipt);
+                
+                // Set document title for PDF filename
+                const refNo  = receipt.id || '000000';
+                const from   = (receipt.from || 'Client').trim().replace(/\s+/g, '_');
+                const dateStr = (receipt.date || '').replace(/\//g, '');
+                document.title = `REC-${refNo}_${from}_${dateStr}`;
+                
+                // Auto-print if in print mode
+                if (isPrintMode) {
+                    setTimeout(() => { window.print(); }, 500);
+                }
+                
+                // Clear the print data after using
+                localStorage.removeItem('printReceiptData');
+            } catch (e) {
+                console.error('Error parsing receipt data:', e);
+            }
+        }
+    }
+
+    function populateReceiptData(receipt) {
+        // Update receipt number
+        document.getElementById('numDisplay').textContent = receipt.id || String(currentNumber).padStart(6, '0');
+        
+        // Update date if provided
+        if (receipt.date) {
+            const dateParts = receipt.date.split('/');
+            if (dateParts.length === 3) {
+                document.getElementById('day').value = dateParts[0];
+                document.getElementById('month').value = dateParts[1];
+                document.getElementById('year').value = dateParts[2];
+            }
+        }
+        
+        // Update receipt fields
+        document.getElementById('fromField').value = receipt.from || '';
+        document.getElementById('phoneField').value = receipt.phone || '';
+        document.getElementById('emailField').value = receipt.email || '';
+        document.getElementById('amountField').value = receipt.amount || '';
+        document.getElementById('checkField').value = receipt.method || '';
+        document.getElementById('forField').value = receipt.desc || '';
+    }
+
     window.onload = function() {
         updateDisplay();
         setDate();
+        loadReceiptData();
     };
 </script>
 

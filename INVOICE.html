@@ -37,6 +37,12 @@
             .no-print, .hide-on-print, .controls, .btn-delete-term, .terms-actions {
                 display: none !important;
             }
+            .total-row label { display: inline !important; }
+            .total-row input[type="checkbox"] { display: none !important; }
+            input[type="text"], input[type="number"] { border: none !important; background: transparent !important; -webkit-appearance: none !important; appearance: none !important; }
+            .input-inline { border: none !important; background: transparent !important; width: auto !important; min-width: 60px !important; }
+            .stamp-old { display: none !important; }
+            .signature-section { margin-top: 110px !important; padding: 10px 40px 30px 40px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-end !important; direction: ltr !important; page-break-inside: avoid; }
         }
 
         body { font-family: var(--font-main); background: #e0e0e0; padding: 20px; color: #333; }
@@ -116,17 +122,13 @@
         .total-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .total-row.grand-total { background: var(--light-green); padding: 8px; border: none; margin-top: 5px; font-weight: bold; font-size: 16px; color: var(--primary-green); }
 
-        .signature-section { 
-            margin-top: 10px; 
-            padding: 10px 40px 30px 40px; 
-            text-align: center; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-        }
-        .signature-container { position: relative; width: 220px; padding-top: 20px; /* تم تعديلها بدلاً من 240px لرفع التوقيع */ }
+
+        .signature-section { margin-top: auto; padding: 30px 40px 50px; text-align: center; display: flex; flex-direction: column; align-items: center; min-height: 150px; }
+        .signature-container { position: relative; width: 220px; padding-top: 30px; margin-top: auto; }
         .signature-image { width: 160px; height: auto; margin-bottom: -10px; position: relative; z-index: 1; }
-        .sig-line { border-top: 2px solid var(--primary-green); width: 100%; padding-top: 5px; font-weight: bold; font-size: 13px; position: relative; z-index: 2; }
+        .sig-line { border-top: 2px solid var(--primary-green); width: 100%; padding-top: 8px; font-weight: bold; font-size: 13px; position: relative; z-index: 2; }
+        .stamp-container { text-align: center; margin-top: 20px; }
+        .stamp-image { width: 150px; height: 150px; object-fit: contain; }
 
         .controls { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; }
         .btn { padding: 12px; cursor: pointer; border: none; border-radius: 50%; width: 50px; height: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 18px; }
@@ -248,14 +250,14 @@
 
             <div class="total-row">
                 <input type="number" id="shippingInput" value="0" oninput="calculate()" class="input-inline">
-                <span>Shipping / شحن</span>
+                <span>Shipping</span>
             </div>
 
             <div class="total-row" id="row-installation">
                 <input type="number" id="installationInput" value="0" oninput="calculate()" class="input-inline">
                 <label class="no-print">
                     <input type="checkbox" id="installationStatus" checked onchange="calculate()"> 
-                    <span>Installation / تركيب</span>
+                    <span>Installation</span>
                 </label>
             </div>
 
@@ -263,20 +265,39 @@
                 <input type="number" id="discountInput" value="0" oninput="calculate()" class="input-inline">
                 <label class="no-print">
                     <input type="checkbox" id="discountStatus" checked onchange="calculate()"> 
-                    <span>Discount / خصم</span>
+                    <span>Discount</span>
                 </label>
             </div>
 
             <div class="total-row grand-total">
                 <span id="grandTotal">EGP 0.00</span>
-                <span>TOTAL / الإجمالي</span>
+                <span>TOTAL</span>
+            </div>
+
+            <div class="total-row" style="margin-top:10px;border-top:2px solid #ccc;padding-top:8px;">
+                <input type="number" id="paidInput" value="0" oninput="calculate()" class="input-inline" style="width:100px;">
+                <span style="font-weight:600;color:#2E7D32;">Paid</span>
+            </div>
+
+            <div class="total-row" style="background:#fff8e1;padding:8px;margin-top:2px;font-weight:bold;font-size:15px;color:#e65100;border:none;">
+                <span id="balanceDue">EGP 0.00</span>
+                <span>Balance Due</span>
+            </div>
+
+            <div class="total-row" style="margin-top:6px;border-top:1px dashed #ddd;padding-top:6px;">
+                <input type="text" id="nextPayment" placeholder="Date / Amount" style="width:140px;border:1px solid #ddd;padding:3px 6px;border-radius:4px;text-align:center;font-size:12px;font-family:inherit;">
+                <span style="font-size:12px;color:#888;">Next Payment</span>
             </div>
         </div>
     </div>
 
     <div class="signature-section">
+        <div class="stamp-container">
+            <img src="optech_stamp.png" alt="Official Stamp" class="stamp-image" onerror="this.style.display='none'">
+            <div style="font-size:12px;color:#888;margin-top:4px;text-align:center;">Official Stamp</div>
+        </div>
         <div class="signature-container">
-            <img src="Signature.png" alt="Signature" class="signature-image">
+            <img src="Signature.png" alt="Signature" class="signature-image" onerror="this.style.display='none'">
             <div class="sig-line">Authorized Signature</div>
         </div>
     </div>
@@ -294,6 +315,71 @@
 
     function updateInvoiceDisplay() {
         document.getElementById('invoiceNo').value = String(currentInvoiceNum).padStart(9, '0');
+        
+        // Load invoice data from database if available
+        loadInvoiceData();
+    }
+
+    function loadInvoiceData() {
+        // Get invoice ID from URL or use latest
+        const urlParams = new URLSearchParams(window.location.search);
+        const invoiceId = urlParams.get('id') || localStorage.getItem('currentInvoiceId');
+        const isPrintMode = urlParams.get('print') === 'true';
+        
+        if (invoiceId) {
+            let invoice;
+            
+            if (isPrintMode) {
+                // Load from printInvoiceData (stored by printInvoiceInline)
+                const printData = localStorage.getItem('printInvoiceData');
+                if (printData) {
+                    invoice = JSON.parse(printData);
+                }
+            } else {
+                // Load from localStorage database
+                const invoices = JSON.parse(localStorage.getItem('optech_invoices')) || [];
+                invoice = invoices.find(inv => inv.id === invoiceId);
+            }
+            
+            if (invoice) {
+                populateInvoiceForm(invoice);
+            }
+        }
+    }
+
+    function populateInvoiceForm(invoice) {
+        // Populate customer data
+        document.getElementById('clientName').value = invoice.client || '';
+        document.getElementById('clientPhone').value = invoice.phone || '';
+        document.getElementById('invoiceNo').value = invoice.id || '';
+        document.getElementById('invoiceDate').value = invoice.date || '';
+        document.getElementById('dueDate').value = invoice.due || '';
+        
+        // Clear existing items
+        const tbody = document.querySelector('#itemsTable tbody');
+        tbody.innerHTML = '';
+        
+        // Populate items
+        if (invoice._items && invoice._items.length > 0) {
+            invoice._items.forEach(item => {
+                const row = createItemRow(item.desc || '', item.qty || 1, item.price || 0);
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Update totals
+        calculate();
+    }
+
+    function createItemRow(description, quantity, price) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="desc-input" value="${description}" oninput="calculate()"></td>
+            <td><input type="number" class="qty" value="${quantity}" oninput="calculate()"></td>
+            <td><input type="number" class="price" value="${price}" oninput="calculate()"></td>
+            <td class="total-cell">${(quantity * price).toFixed(2)}</td>
+        `;
+        return row;
     }
 
     function setDate() {
@@ -324,6 +410,8 @@
         document.getElementById('shippingInput').value = '0';
         document.getElementById('installationInput').value = '0';
         document.getElementById('discountInput').value = '0';
+        document.getElementById('paidInput').value = '0';
+        document.getElementById('nextPayment').value = '';
         
         const tbody = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
         tbody.innerHTML = `
@@ -369,40 +457,151 @@
         });
 
         let tax = document.getElementById('taxStatus').checked ? subtotal * 0.14 : 0;
+        const taxRow = document.getElementById('row-tax');
+        if (taxRow) taxRow.style.display = document.getElementById('taxStatus').checked ? 'flex' : 'none';
         let installation = document.getElementById('installationStatus').checked ? (parseFloat(document.getElementById('installationInput').value) || 0) : 0;
         let discount = document.getElementById('discountStatus').checked ? (parseFloat(document.getElementById('discountInput').value) || 0) : 0;
         let shipping = parseFloat(document.getElementById('shippingInput').value) || 0;
         
         const finalTotal = subtotal + tax + shipping + installation - discount;
+        const paid = parseFloat(document.getElementById('paidInput').value) || 0;
+        const balanceDue = finalTotal - paid;
 
         document.getElementById('subtotal').textContent = subtotal.toLocaleString(undefined, {minimumFractionDigits: 2});
         document.getElementById('taxValue').textContent = tax.toLocaleString(undefined, {minimumFractionDigits: 2});
         document.getElementById('grandTotal').textContent = 'EGP ' + finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('balanceDue').textContent = 'EGP ' + balanceDue.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('balanceDue').style.color = balanceDue <= 0 ? '#2E7D32' : '#e65100';
     }
 
     function prepareAndPrint() {
-        // الحصول على البيانات لاسم الملف
+        // Get data for filename
         const client = (document.getElementById('clientName').value || "Client").trim();
         const invNo = document.getElementById('invoiceNo').value || "000";
         const invDate = document.getElementById('invoiceDate').value;
         
-        // تغيير عنوان المستند ليصبح هو اسم الملف عند الحفظ
-        const originalTitle = document.title;
-        document.title = `${client}_Invoice_${invNo}_${invDate}`;
+        // Format date for filename (DD-MM-YYYY to DDMMYYYY)
+        const formattedDate = invDate.replace(/-/g, '');
+        const filename = `INV-${invNo}_${client}_${formattedDate}`;
         
-        // استدعاء أمر الطباعة
+        // Store filename in localStorage for the print dialog
+        localStorage.setItem('pdfFilename', filename);
+        
+        // Set document title as backup
+        const originalTitle = document.title;
+        document.title = filename;
+        
+        // Trigger print
         window.print();
         
-        // إعادة العنوان الأصلي بعد نافذة الطباعة
+        // Restore title
         setTimeout(() => {
             document.title = originalTitle;
+            localStorage.removeItem('pdfFilename');
         }, 1000);
+    }
+
+    function loadInvoiceData() {
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const invoiceId = urlParams.get('id');
+        const isPrintMode = urlParams.get('print') === 'true';
+        
+        // Try to get invoice data from localStorage (for direct printing)
+        const printData = localStorage.getItem('printInvoiceData');
+        
+        if (printData) {
+            try {
+                const invoice = JSON.parse(printData);
+                populateInvoiceData(invoice);
+                
+                // Set document title for PDF filename
+                const client = (invoice.client || "Client").trim();
+                const invNo = invoice.id || "000";
+                const invDate = invoice.date || "";
+                const formattedDate = invDate.replace(/-/g, '');
+                document.title = `INV-${invNo}_${client}_${formattedDate}`;
+                
+                // Auto-print if in print mode
+                if (isPrintMode) {
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
+                }
+                
+                // Clear the print data after using
+                localStorage.removeItem('printInvoiceData');
+            } catch (e) {
+                console.error('Error parsing invoice data:', e);
+            }
+        }
+    }
+
+    function populateInvoiceData(invoice) {
+        // Update invoice number
+        document.getElementById('invoiceNo').value = invoice.id || '';
+        
+        // Update dates if provided
+        if (invoice.date) {
+            document.getElementById('invoiceDate').value = invoice.date;
+        }
+        
+        // Update client information
+        document.getElementById('clientName').value = invoice.client || '';
+        document.getElementById('clientPhone').value = invoice.phone || '';
+        
+        // Update items if provided
+        if (invoice._items && invoice._items.length > 0) {
+            const tbody = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = '';
+            
+            invoice._items.forEach(item => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><input type="text" class="desc-input" value="${item.desc || ''}" oninput="calculate()"></td>
+                    <td><input type="number" class="qty" value="${item.qty || 1}" oninput="calculate()"></td>
+                    <td><input type="number" class="price" value="${item.price || 0}" oninput="calculate()"></td>
+                    <td class="total-cell">${((item.qty || 1) * (item.price || 0)).toFixed(2)}</td>
+                `;
+            });
+            
+            // Update totals
+            calculate();
+        }
+        
+        // Update other fields
+        document.getElementById('taxStatus').checked = (invoice._tax !== false);
+        if (invoice._ship !== undefined) {
+            document.getElementById('shippingInput').value = invoice._ship;
+        }
+        if (invoice._inst !== false) {
+            document.getElementById('installationStatus').checked = true;
+        }
+        if (invoice._instVal !== undefined) {
+            document.getElementById('installationInput').value = invoice._instVal;
+        }
+        if (invoice._disc === true) {
+            document.getElementById('discountStatus').checked = true;
+        }
+        if (invoice._discVal !== undefined) {
+            document.getElementById('discountInput').value = invoice._discVal;
+        }
+        if (invoice._paid !== undefined) {
+            document.getElementById('paidInput').value = invoice._paid;
+        }
+        if (invoice._nextPayment !== undefined) {
+            document.getElementById('nextPayment').value = invoice._nextPayment;
+        }
+        
+        // Recalculate totals
+        calculate();
     }
 
     window.onload = () => {
         updateInvoiceDisplay();
         setDate();
         calculate();
+        loadInvoiceData();
     };
 </script>
 
