@@ -1,16 +1,19 @@
 {
   "name": "optech-erp",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "OPTECH IT Solutions — ERP System",
-  "main": "server.js",
+  "main": "server/index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "migrate": "node migrate.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "bcrypt": "^5.1.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.1.14"
   }
 }

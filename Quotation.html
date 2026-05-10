@@ -18,24 +18,32 @@
         @media print {
             @page { margin: 15mm; size: A4; }
             body { margin: 0; padding: 0; background: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .quotation-card { width: 100% !important; max-width: 100% !important; margin: 0 !important; border: none !important; box-shadow: none !important; page-break-inside: avoid; }
+            .quotation-card { width: 100% !important; max-width: 100% !important; margin: 0 !important; border: none !important; box-shadow: none !important; }
             .no-print, .controls, .btn-delete-term, .terms-actions { display: none !important; }
             .total-row label { display: inline !important; }
             .total-row input[type="checkbox"] { display: none !important; }
             input[type="text"], input[type="number"], textarea { border: none !important; background: transparent !important; -webkit-appearance: none !important; appearance: none !important; color: #000 !important; }
             .input-inline { border: none !important; background: transparent !important; width: auto !important; min-width: 60px !important; }
-            .items-table { page-break-inside: avoid; }
-            .items-table td { border: 1px solid #000 !important; vertical-align: top !important; word-wrap: break-word !important; overflow-wrap: break-word !important; }
-            .items-table th { border: 1px solid #000 !important; }
-            .items-table input[type="number"] { height: auto !important; min-height: 40px !important; text-align: center !important; }
-            .items-table textarea { height: auto !important; min-height: 100px !important; max-height: none !important; overflow: visible !important; white-space: pre-wrap !important; resize: none !important; text-align: left !important; }
-            .header { text-align: center !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
-            .company-info { text-align: center !important; margin: 0 auto !important; }
-            .logo-section { text-align: center !important; margin: 0 auto !important; }
-            .logo { display: block !important; margin: 0 auto !important; text-align: center !important; }
-            .signature-section { margin-top: 100px !important; padding: 30px 40px 60px !important; text-align: center !important; display: flex !important; flex-direction: column !important; align-items: center !important; page-break-inside: avoid; }
-            .stamp { position: fixed !important; bottom: 110px !important; left: 130px !important; width: 150px !important; height: 150px !important; pointer-events: none !important; z-index: 1000 !important; }
-            .bottom-note { page-break-inside: avoid; margin-top: 0px !important; text-align: center !important; }
+            .items-table td { border: 1px solid #ccc !important; vertical-align: top !important; word-wrap: break-word !important; overflow-wrap: break-word !important; }
+            .items-table th { border: 1px solid #ccc !important; }
+            .items-table .print-text-div {
+                font-size: 12px !important;
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                line-height: 1.5 !important;
+                padding: 4px 0 !important;
+                width: 100% !important;
+                text-align: left !important;
+            }
+            .items-table textarea { display: none !important; }
+            .items-table input[type="number"] { height: auto !important; text-align: center !important; }
+            .header { display: flex !important; justify-content: space-between !important; align-items: center !important; }
+            .logo { display: block !important; }
+            .signature-section {
+                display: flex !important;
+                margin-top: 80px !important;
+            }
         }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e0e0e0; padding: 20px; color: #333; direction: ltr; }
@@ -63,8 +71,8 @@
             border-bottom: 1px solid #eee;
         }
 
-        .company-info h2 { color: var(--primary-green); font-size: 21px; margin: 0; text-align: left; }
-        .company-info p  { font-size: 13px; color: #666; line-height: 1.5; text-align: left; margin: 0; }
+        .company-info h2 { color: var(--primary-green); font-size: 17px; margin: 0; text-align: left; }
+        .company-info p  { font-size: 11px; color: #666; line-height: 1.5; text-align: left; margin: 0; }
 
         .title-center { text-align: center; }
         .title-center h1 { color: var(--primary-green); letter-spacing: 4px; font-size: 32px; }
@@ -87,12 +95,12 @@
         .details { padding: 15px 40px; display: flex; justify-content: space-between; background: #fcfcfc; }
 
         .bill-to h3 { color: var(--primary-green); font-size: 16px; margin-bottom: 8px; border-bottom: 2px solid var(--accent-green); display: inline-block; }
-        .bill-to input { display: block; width: 280px; border: none; background: transparent; padding: 4px 0; font-size: 14px; font-weight: bold; outline: none; border-bottom: 1px dashed #ccc; margin-bottom: 4px; }
+        .bill-to input { display: block; width: 280px; border: none; background: transparent; padding: 4px 0; font-size: 14px; font-weight: bold; outline: none; border-bottom: 1px dashed #ccc; margin-bottom: 4px; direction: ltr; text-align: left; }
 
         .meta-data { text-align: left; }
         .meta-row { display: flex; gap: 15px; margin-bottom: 6px; justify-content: flex-end; }
-        .meta-row label { font-weight: bold; color: var(--primary-green); width: 130px; text-align: right; font-size: 13px; }
-        .meta-row input  { width: 140px; border: 1px solid #ddd; padding: 3px 6px; border-radius: 4px; text-align: center; font-size: 13px; }
+        .meta-row label { font-weight: bold; color: var(--primary-green); width: 130px; text-align: left; font-size: 13px; }
+        .meta-row input  { width: 140px; border: 1px solid #ddd; padding: 3px 6px; border-radius: 4px; text-align: right; font-size: 13px; }
 
         .items-table { width: calc(100% - 80px); margin: 10px 40px; border-collapse: collapse; display: table; table-layout: auto; border: 1px solid #ddd; }
         .items-table th { background: var(--primary-green); color: #fff; padding: 8px 6px; text-align: center; font-size: 12px; font-weight: 600; border: 1px solid var(--primary-green); }
@@ -103,11 +111,13 @@
         .col-qty   { width: 8%; text-align: center; min-width: 60px; }
         .col-price { width: 14%; text-align: center; min-width: 80px; }
         .col-total { width: 13%; font-weight: bold; text-align: center; font-size: 14px; min-width: 80px; }
+        .total-cell { text-align: right; font-weight: bold; }
         .img-preview { display: flex; justify-content: center; align-items: center; }
-        .items-table textarea { width: 100%; border: 1px solid #e0e0e0; padding: 8px; font-size: 12px; background: #fff; border-radius: 4px; resize: vertical; min-height: 100px; height: auto; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: break-word; }
+        .items-table textarea { width: 100%; border: 1px solid #e0e0e0; padding: 8px; font-size: 12px; background: #fff; border-radius: 4px; resize: vertical; min-height: 70px; height: auto; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: break-word; word-break: break-word; overflow: hidden; box-sizing: border-box; }
         .items-table input[type="number"] { width: 100%; border: 1px solid #e0e0e0; padding: 8px; font-size: 13px; background: #fff; border-radius: 4px; direction: ltr; text-align: center; height: auto; min-height: 40px; }
         .items-table .desc-input { direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: break-word; }
         .items-table .spec-input { direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: break-word; }
+        .items-table .price { text-align: right; }
 
         .summary-section { padding: 10px 40px; display: flex; justify-content: space-between; }
 
@@ -125,12 +135,14 @@
         .total-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .total-row.grand-total { background: var(--light-green); padding: 8px; border: none; margin-top: 5px; font-weight: bold; font-size: 16px; color: var(--primary-green); }
 
-        .signature-section { margin-top: auto; padding: 30px 40px 50px; text-align: center; display: flex; flex-direction: column; align-items: center; min-height: 150px; }
-        .signature-container { position: relative; width: 220px; padding-top: 30px; margin-top: auto; }
-        .signature-image { width: 160px; height: auto; margin-bottom: -10px; position: relative; z-index: 1; }
-        .sig-line { border-top: 2px solid var(--primary-green); width: 100%; padding-top: 8px; font-weight: bold; font-size: 13px; position: relative; z-index: 2; }
-        .stamp-container { text-align: center; margin-top: 20px; }
-        .stamp-image { width: 150px; height: 150px; object-fit: contain; }
+        /* Signature section — stamp beside signature, centered */
+        .signature-section { padding: 20px 40px 30px; display: flex; justify-content: center; align-items: flex-end; gap: 50px; min-height: 140px; }
+        .signature-container { text-align: center; width: 200px; }
+        .signature-image { width: 150px; height: auto; margin-bottom: -8px; }
+        .sig-line { border-top: 2px solid var(--primary-green); width: 100%; padding-top: 7px; font-weight: bold; font-size: 13px; }
+        .stamp-side { text-align: center; }
+        .stamp-side img { width: 120px; height: 120px; object-fit: contain; display: block; margin: 0 auto 4px; }
+        .stamp-side span { font-size: 11px; color: #888; }
 
         .bottom-note { text-align: center; padding: 10px 40px 20px; font-size: 11px; color: #999; border-top: 1px solid #eee; }
 
@@ -146,9 +158,6 @@
 </head>
 <body dir="ltr">
 
-<div class="stamp">
-    <img src="optech_stamp.png" alt="Optech Stamp" style="width: 100%; height: 100%; object-fit: contain;">
-</div>
 
 <div class="quotation-card">
     <div class="top-banner"></div>
@@ -185,16 +194,16 @@
         </div>
         <div class="meta-data">
             <div class="meta-row">
-                <input type="text" id="quotationNo">
                 <label>Quotation No</label>
+                <input type="text" id="quotationNo">
             </div>
             <div class="meta-row">
-                <input type="text" id="quotationDate">
                 <label>Issue Date</label>
+                <input type="text" id="quotationDate">
             </div>
             <div class="meta-row">
-                <input type="text" id="preparedBy" placeholder="Sales Engineer">
                 <label>Prepared By</label>
+                <input type="text" id="preparedBy" placeholder="Sales Engineer">
             </div>
         </div>
     </div>
@@ -264,17 +273,23 @@
         </div>
     </div>
 
+    <!-- Screen view: stamp + signature side by side -->
     <div class="signature-section">
+        <div class="stamp-side">
+            <img src="optech_stamp.png" alt="Official Stamp" onerror="this.style.display='none'">
+            <span>Official Stamp</span>
+        </div>
         <div class="signature-container">
             <img src="Signature.png" alt="Signature" class="signature-image" onerror="this.style.display='none'">
             <div class="sig-line">Authorized Signature</div>
         </div>
     </div>
-
     <div class="bottom-note">
-        Thank you for considering OPTECH IT Solutions. We look forward to serving you.
-        For inquiries, please contact us at info@optech-eg.com or +20 1121450646
+        Thank you for considering OPTECH IT Solutions. We look forward to serving you.<br>
+        info@optech-eg.com &nbsp;|&nbsp; +20 1121450646
     </div>
+
+
 </div>
 
 <div class="controls">
@@ -388,30 +403,16 @@
     }
 
     function prepareAndPrint() {
-        // Get data for filename
-        const client = (document.getElementById('clientName').value || 'Client').trim();
-        const num = document.getElementById('quotationNo').value;
-        const date = document.getElementById('quotationDate').value;
-        
-        // Format date for filename (DD-MM-YYYY to DDMMYYYY)
-        const formattedDate = date.replace(/-/g, '');
-        const filename = `QUO-${num}_${client}_${formattedDate}`;
-        
-        // Store filename in localStorage for the print dialog
-        localStorage.setItem('pdfFilename', filename);
-        
-        // Set document title as backup
-        const originalTitle = document.title;
-        document.title = filename;
-        
-        // Trigger print
         window.print();
-        
-        // Restore title
-        setTimeout(() => {
-            document.title = originalTitle;
-            localStorage.removeItem('pdfFilename');
-        }, 1000);
+    }
+
+    function autoExpand(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    }
+
+    function autoExpandAll() {
+        document.querySelectorAll('textarea').forEach(t => autoExpand(t));
     }
 
     function loadQuotationData() {
@@ -435,11 +436,9 @@
                 const formattedDate = date.replace(/-/g, '');
                 document.title = `QUO-${num}_${client}_${formattedDate}`;
                 
-                // Auto-print if in print mode
+                // Auto-print if in print mode — parent (app.js) will trigger print
                 if (isPrintMode) {
-                    setTimeout(() => {
-                        window.print();
-                    }, 500);
+                    document.title = num + '_' + client + '_' + formattedDate;
                 }
                 
                 // Clear the print data after using
@@ -533,11 +532,31 @@
         calculate();
     }
 
+    // ── PRINT FIX: swap textarea ↔ div so full content prints ──────────
+    function prepareTextareasForPrint() {
+        document.querySelectorAll('#itemsTable textarea').forEach(function(ta) {
+            const div = document.createElement('div');
+            div.className = 'print-text-div';
+            div.textContent = ta.value;
+            div.dataset.forTextarea = 'true';
+            ta.parentNode.insertBefore(div, ta.nextSibling);
+        });
+    }
+    function restoreTextareasAfterPrint() {
+        document.querySelectorAll('.print-text-div[data-for-textarea]').forEach(function(div) {
+            div.parentNode.removeChild(div);
+        });
+    }
+    window.addEventListener('beforeprint', prepareTextareasForPrint);
+    window.addEventListener('afterprint',  restoreTextareasAfterPrint);
+
     window.onload = function() {
         updateDisplay();
         setDate();
         calculate();
         loadQuotationData();
+        autoExpandAll();
+        document.addEventListener('input', e => { if(e.target.tagName==='TEXTAREA') autoExpand(e.target); });
     };
 </script>
 </body>

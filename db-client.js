@@ -4,6 +4,7 @@
  * - Local mode   : uses localStorage only (fallback when no server)
  */
 const DbClient = (() => {
+    const FETCH_TIMEOUT = 5000;
 
     // ── Token helpers ────────────────────────────────────────────────────
     function getToken()        { return sessionStorage.getItem('optech_token') || ''; }
@@ -19,11 +20,17 @@ const DbClient = (() => {
         return { 'Content-Type': 'application/json', 'x-auth-token': getToken(), ...(extra||{}) };
     }
 
+    function fetchWithTimeout(url, opts, ms) {
+        const ctrl = new AbortController();
+        const id = setTimeout(() => ctrl.abort(), ms || FETCH_TIMEOUT);
+        return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(id));
+    }
+
     // ── Auth ─────────────────────────────────────────────────────────────
     async function login(username, password) {
         if (!IS_SERVER) return { ok: false, error: 'No server — open via http://server-ip:3000' };
         try {
-            const r = await fetch('/api/auth/login', {
+            const r = await fetchWithTimeout('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -31,12 +38,12 @@ const DbClient = (() => {
             const data = await r.json();
             if (data.ok) { setToken(data.token); setCurrentUser(data.user); }
             return data;
-        } catch (e) { return { ok: false, error: 'Cannot reach server: ' + e.message }; }
+        } catch (e) { return { ok: false, error: 'Cannot reach server: ' + (e.name==='AbortError'?'Connection timed out':e.message) }; }
     }
 
     async function logout() {
         if (IS_SERVER && getToken()) {
-            try { await fetch('/api/auth/logout', { method:'POST', headers: headers() }); } catch {}
+            try { await fetchWithTimeout('/api/auth/logout', { method:'POST', headers: headers() }); } catch {}
         }
         clearToken();
     }
@@ -44,8 +51,8 @@ const DbClient = (() => {
     async function ping() {
         if (!IS_SERVER) return false;
         try {
-            const r = await fetch('/api/auth/ping', { headers: headers(), cache: 'no-store' });
-            if (r.status === 401) { clearToken(); return false; }
+            const r = await fetchWithTimeout('/api/auth/ping', { cache: 'no-store', headers: getToken() ? { 'x-auth-token': getToken() } : {} });
+            if (r.status === 401) { if (getToken()) clearToken(); return false; }
             const d = await r.json();
             if (d.ok && d.user) setCurrentUser(d.user);
             return d.ok;
@@ -56,7 +63,7 @@ const DbClient = (() => {
     async function loadAll() {
         if (!IS_SERVER || !getToken()) return null;
         try {
-            const r = await fetch('/api/db', { headers: headers(), cache: 'no-store' });
+            const r = await fetchWithTimeout('/api/db', { headers: headers(), cache: 'no-store' });
             if (r.status === 401) { clearToken(); return null; }
             if (!r.ok) return null;
             return await r.json();
@@ -64,12 +71,10 @@ const DbClient = (() => {
     }
 
     async function saveCollection(collection, data) {
-        // always mirror to localStorage as cache
         try { localStorage.setItem('optech_' + collection, JSON.stringify(data)); } catch {}
-
         if (!IS_SERVER || !getToken()) return;
         try {
-            await fetch('/api/db/' + collection, {
+            await fetchWithTimeout('/api/db/' + collection, {
                 method:  'POST',
                 headers: headers(),
                 body:    JSON.stringify(data)
@@ -82,27 +87,29 @@ const DbClient = (() => {
     // ── Users (admin only) ───────────────────────────────────────────────
     async function getUsers() {
         if (!IS_SERVER) return [];
-        const r = await fetch('/api/users', { headers: headers() });
-        if (!r.ok) return [];
-        return await r.json();
+        try {
+            const r = await fetchWithTimeout('/api/users', { headers: headers() });
+            if (!r.ok) return [];
+            return await r.json();
+        } catch { return []; }
     }
 
     async function createUser(userData) {
-        const r = await fetch('/api/users', {
+        const r = await fetchWithTimeout('/api/users', {
             method: 'POST', headers: headers(), body: JSON.stringify(userData)
         });
         return await r.json();
     }
 
     async function updateUser(id, userData) {
-        const r = await fetch('/api/users/' + id, {
+        const r = await fetchWithTimeout('/api/users/' + id, {
             method: 'PUT', headers: headers(), body: JSON.stringify(userData)
         });
         return await r.json();
     }
 
     async function deleteUser(id) {
-        const r = await fetch('/api/users/' + id, {
+        const r = await fetchWithTimeout('/api/users/' + id, {
             method: 'DELETE', headers: headers()
         });
         return await r.json();

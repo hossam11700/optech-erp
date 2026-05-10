@@ -303,20 +303,21 @@ async function checkSession() {
     return;
   }
 
-  // Ping server
   const alive = await DbClient.ping();
   if (alive) {
-    // Already logged in — go to dashboard
     window.location.replace('index.html');
     return;
   }
 
-  // Server is up but not logged in — or server is down
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 3000);
   try {
-    const r = await fetch('/api/auth/ping', { cache:'no-store' });
+    await fetch('/api/auth/ping', { cache:'no-store', signal: ctrl.signal });
+    clearTimeout(to);
     dot.className   = 'conn-dot connected';
-    label.textContent = 'Connected to server — data shared across all devices';
+    label.textContent = 'Connected to server — enter your credentials';
   } catch {
+    clearTimeout(to);
     dot.className   = 'conn-dot disconnected';
     label.textContent = 'Server offline — start with: node server.js';
   }

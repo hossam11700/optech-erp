@@ -104,6 +104,7 @@ function openInvoiceModal(existing){
     openModalShell(`<div style="position:relative;width:100%;max-width:900px;margin:auto;">
       <button onclick="closeModalShell()" class="no-print-in-modal" style="position:fixed;top:15px;right:15px;z-index:10001;background:white;border:none;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3);line-height:1;">×</button>
       <div class="no-print-in-modal" style="display:flex;justify-content:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <button onclick="openInventoryPicker('invoice')" style="${B('#6a1b9a')}">📦 From Inventory</button>
         <button onclick="invAddRow()" style="${B('#4CAF50')}">+ Add Item</button>
         <button onclick="invRemoveRow()" style="${B('#f44336')}">− Remove</button>
         <button onclick="invSaveAndPrint()" style="${B('#1A4325')}">Print & Save</button>
@@ -139,7 +140,7 @@ function invRemoveRow(){const r=document.querySelectorAll('#inv-items tbody tr')
 function invAddTerm(){document.getElementById('inv-terms').insertAdjacentHTML('beforeend',invTermLine(''));}
 function invCalc(){let sub=0;document.querySelectorAll('#inv-items tbody tr').forEach(r=>{const q=parseFloat(r.querySelector('.inv-qty')?.value)||0,p=parseFloat(r.querySelector('.inv-price')?.value)||0,v=q*p;const c=r.querySelector('.inv-total-cell');if(c)c.textContent=v.toLocaleString(undefined,{minimumFractionDigits:2});sub+=v;});const g=id=>document.getElementById(id);const taxCb=g('inv-tax-cb');const taxChecked=taxCb?.checked||false;const tax=taxChecked?sub*0.14:0,inst=g('inv-inst-cb')?.checked?(parseFloat(g('inv-inst')?.value)||0):0,disc=g('inv-disc-cb')?.checked?(parseFloat(g('inv-disc')?.value)||0):0,ship=parseFloat(g('inv-ship')?.value)||0,tot=sub+tax+ship+inst-disc,paid=parseFloat(g('inv-paid')?.value)||0,balance=tot-paid,f=n=>n.toLocaleString(undefined,{minimumFractionDigits:2});if(g('inv-sub'))g('inv-sub').textContent=f(sub);if(g('inv-tax'))g('inv-tax').textContent=f(tax);if(g('inv-grand'))g('inv-grand').textContent='EGP '+f(tot);const taxRow=g('inv-tax-row');if(taxRow)taxRow.style.display=taxChecked?'flex':'none';if(g('inv-balance')){g('inv-balance').textContent='EGP '+f(balance);g('inv-balance').style.color=balance<=0?'#2E7D32':'#e65100';}}
 function invCollect(){const raw=document.getElementById('inv-grand')?.textContent||'0';const items=[];document.querySelectorAll('#inv-items tbody tr').forEach(r=>{items.push({desc:r.querySelector('.inv-desc')?.value||'',qty:parseFloat(r.querySelector('.inv-qty')?.value)||0,price:parseFloat(r.querySelector('.inv-price')?.value)||0});});const terms=[];document.querySelectorAll('#inv-terms input[type=text]').forEach(i=>{if(i.value.trim())terms.push(i.value.trim());});const g=id=>document.getElementById(id);return{id:g('inv-no')?.value||String(invNum).padStart(9,'0'),client:g('inv-client')?.value||'Unknown',phone:g('inv-phone')?.value||'',date:g('inv-date')?.value||'',due:g('inv-due')?.value||'',total:parseFloat(raw.replace('EGP ','').replace(/,/g,''))||0,_items:items,_tax:g('inv-tax-cb')?.checked!==false,_ship:parseFloat(g('inv-ship')?.value)||0,_inst:g('inv-inst-cb')?.checked!==false,_instVal:parseFloat(g('inv-inst')?.value)||0,_disc:g('inv-disc-cb')?.checked===true,_discVal:parseFloat(g('inv-disc')?.value)||0,_paid:parseFloat(g('inv-paid')?.value)||0,_nextPayment:g('inv-next-pay')?.value||'',_terms:terms};}
-function _pushInvoice(rec){const i=db.invoices.findIndex(x=>x.id===rec.id);if(i>=0)db.invoices[i]=rec;else db.invoices.push(rec);saveDB('invoices');_refreshView();}
+function _pushInvoice(rec){const i=db.invoices.findIndex(x=>x.id===rec.id);if(i>=0)db.invoices[i]=rec;else db.invoices.push(rec);saveDB('invoices');autoRegisterCustomer(rec.client, rec.phone, '');_refreshView();}
 function invSaveOnly(btn){_pushInvoice(invCollect());if(btn){btn.textContent='Saved!';btn.style.background='#2E7D32';setTimeout(()=>{btn.textContent='Save Only';btn.style.background='#e65100';},2000);}}
 function invSaveAndPrint(){
     const rec=invCollect();
@@ -158,6 +159,10 @@ function invSaveAndPrint(){
     // When the iframe loads, trigger print
     iframe.onload = function() {
         setTimeout(() => {
+            const c = (rec.client||'Client').trim().replace(/\s+/g,'_');
+            const n = rec.id||'000';
+            const d = (rec.date||'').replace(/-/g,'').replace(/\//g,'');
+            iframe.contentDocument.title = c + '_INV-' + n + '_' + d;
             iframe.contentWindow.print();
             // Remove iframe after printing
             setTimeout(() => {
@@ -408,7 +413,7 @@ function openQuotationModal(existing){
     const items=rec._items||[{desc:'',spec:'',imgBase64:'',qty:1,price:0}];
     openModalShell(`<div style="position:relative;width:100%;max-width:960px;margin:auto;">
       <button onclick="closeModalShell()" class="no-print-in-modal" style="position:fixed;top:15px;right:15px;z-index:10001;background:white;border:none;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3);line-height:1;">×</button>
-      <div class="no-print-in-modal" style="display:flex;justify-content:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;"><button onclick="qAddRow()" style="${B('#4CAF50')}">+ Add Item</button><button onclick="qRemoveRow()" style="${B('#f44336')}">− Remove Item</button><button onclick="qSaveAndPrint()" style="${B('#1A4325')}">Print & Save</button><button onclick="qSaveOnly(this)" style="${B('#e65100')}">Save Only</button></div>
+      <div class="no-print-in-modal" style="display:flex;justify-content:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;"><button onclick="openInventoryPicker('quotation')" style="${B('#6a1b9a')}">📦 From Inventory</button><button onclick="qAddRow()" style="${B('#4CAF50')}">+ Add Item</button><button onclick="qRemoveRow()" style="${B('#f44336')}">− Remove Item</button><button onclick="qSaveAndPrint()" style="${B('#1A4325')}">Print & Save</button><button onclick="qSaveOnly(this)" style="${B('#e65100')}">Save Only</button></div>
       <div id="quotation-modal-card" style="background:#fff;border:1px solid #ccc;box-shadow:0 0 20px rgba(0,0,0,.15);font-family:'Segoe UI',Tahoma,sans-serif;color:#333;overflow:hidden;">
         <div style="height:8px;background:linear-gradient(to right,#0b2414,#4CAF50);"></div>
         <div style="padding:14px 36px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:1px solid #eee;"><div><div style="color:#1A4325;font-size:20px;font-weight:700;margin-bottom:4px;">Optech IT Solutions</div><div style="font-size:12px;color:#666;line-height:1.6;">21/2 Oriana Mall, El Mokattam<br>Mokattam • 11693 • Cairo<br>+20 1121450646 • info@optech-eg.com</div></div><div style="text-align:center;"><div style="color:#1A4325;letter-spacing:3px;font-size:30px;font-weight:700;">QUOTATION</div><div style="color:#888;font-size:11px;letter-spacing:1px;margin-top:3px;">PRICE OFFER / عرض سعر</div></div><div style="text-align:right;"><img src="optech-green-dot copy 2.png" alt="" style="width:80px;height:auto;" onerror="this.style.display='none'"></div></div>
@@ -432,7 +437,7 @@ function qRemoveRow(){const r=document.querySelectorAll('#q-items tbody tr');if(
 function qAddTerm(){document.getElementById('q-terms').insertAdjacentHTML('beforeend',qTermLine(''));}
 function qCalc(){let sub=0;document.querySelectorAll('#q-items tbody tr').forEach(r=>{const q=parseFloat(r.querySelector('.q-qty')?.value)||0,p=parseFloat(r.querySelector('.q-price')?.value)||0,v=q*p;const c=r.querySelector('.q-total-cell');if(c)c.textContent=v.toLocaleString(undefined,{minimumFractionDigits:2});sub+=v;});const g=id=>document.getElementById(id),tax=g('q-tax-cb')?.checked?sub*0.14:0,inst=g('q-inst-cb')?.checked?(parseFloat(g('q-inst')?.value)||0):0,disc=g('q-disc-cb')?.checked?(parseFloat(g('q-disc')?.value)||0):0,ship=parseFloat(g('q-ship')?.value)||0,tot=sub+tax+ship+inst-disc,f=n=>n.toLocaleString(undefined,{minimumFractionDigits:2});if(g('q-sub'))g('q-sub').textContent=f(sub);if(g('q-tax'))g('q-tax').textContent=f(tax);if(g('q-grand'))g('q-grand').textContent='EGP '+f(tot);}
 function qCollect(){const raw=document.getElementById('q-grand')?.textContent||'0';const items=[];document.querySelectorAll('#q-items tbody tr').forEach(r=>{items.push({desc:r.querySelector('.q-desc')?.value||'',spec:r.querySelector('.q-spec')?.value||'',imgBase64:r.querySelector('.q-img-data')?.value||'',qty:parseFloat(r.querySelector('.q-qty')?.value)||0,price:parseFloat(r.querySelector('.q-price')?.value)||0});});const terms=[];document.querySelectorAll('#q-terms input[type=text]').forEach(i=>{if(i.value.trim())terms.push(i.value.trim());});const g=id=>document.getElementById(id);return{id:g('q-no')?.value||'QUO-'+String(qNum).padStart(6,'0'),client:g('q-client')?.value||'Unknown',phone:g('q-phone')?.value||'',email:g('q-email')?.value||'',date:g('q-date')?.value||'',validUntil:g('q-valid')?.value||'',preparedBy:g('q-by')?.value||'',total:parseFloat(raw.replace('EGP ','').replace(/,/g,''))||0,status:'pending',_items:items,_tax:g('q-tax-cb')?.checked!==false,_ship:parseFloat(g('q-ship')?.value)||0,_inst:g('q-inst-cb')?.checked!==false,_instVal:parseFloat(g('q-inst')?.value)||0,_disc:g('q-disc-cb')?.checked===true,_discVal:parseFloat(g('q-disc')?.value)||0,_terms:terms};}
-function _pushQuotation(rec){const i=db.quotations.findIndex(x=>x.id===rec.id);if(i>=0)db.quotations[i]=rec;else db.quotations.push(rec);saveDB('quotations');_refreshView();}
+function _pushQuotation(rec){const i=db.quotations.findIndex(x=>x.id===rec.id);if(i>=0)db.quotations[i]=rec;else db.quotations.push(rec);saveDB('quotations');autoRegisterCustomer(rec.client, rec.phone, rec.email||'');_refreshView();}
 function qSaveOnly(btn){_pushQuotation(qCollect());if(btn){btn.textContent='Saved!';btn.style.background='#2E7D32';setTimeout(()=>{btn.textContent='Save Only';btn.style.background='#e65100';},2000);}}
 function qSaveAndPrint(){
     const rec=qCollect();
@@ -450,6 +455,10 @@ function qSaveAndPrint(){
     // When the iframe loads, trigger print
     iframe.onload = function() {
         setTimeout(() => {
+            const c = (rec.client||'Client').trim().replace(/\s+/g,'_');
+            const n = rec.id||'000';
+            const d = (rec.date||'').replace(/-/g,'').replace(/\//g,'');
+            iframe.contentDocument.title = c + '_' + n + '_' + d;
             iframe.contentWindow.print();
             // Remove iframe after printing
             setTimeout(() => {
@@ -633,7 +642,10 @@ function renderItemsTable(){
     if(!db.inventory.length) return `<div style="text-align:center;padding:40px;background:var(--card-bg,white);border-radius:8px;color:#aaa;">No items yet — click "+ Add Item" to build your inventory</div>`;
     const rows=db.inventory.map(it=>{
         const stockColor=(it.currentStock||0)<=(it.minStock||0)&&it.minStock>0?'#c62828':(it.currentStock||0)<=it.minStock*1.5?'#e65100':'#2E7D32';
+        const thumb=it.imgBase64?`<img src="${it.imgBase64}" style="width:44px;height:36px;object-fit:cover;border-radius:4px;display:block;">`:
+            `<div style="width:44px;height:36px;border:1px dashed #ddd;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:16px;">📦</div>`;
         return `<tr>
+            <td>${thumb}</td>
             <td><strong>${it.sku||'—'}</strong></td>
             <td>${it.name}<div style="font-size:11px;color:#888;">${it.category||''}</div></td>
             <td>${it.unit||'pcs'}</td>
@@ -650,7 +662,7 @@ function renderItemsTable(){
             </td>
         </tr>`;
     }).join('');
-    return `<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>SKU</th><th>Item Name</th><th>Unit</th><th>In Stock</th><th>Min Stock</th><th>Cost Price</th><th>Sale Price</th><th>Location</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div><input id="inv-search" type="text" placeholder="🔍 Search items…" oninput="filterInv(this.value)" style="margin-top:10px;border:1.5px solid #ddd;padding:8px 12px;border-radius:7px;font-size:13px;outline:none;width:260px;">`;
+    return `<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>IMG</th><th>SKU</th><th>Item Name</th><th>Unit</th><th>In Stock</th><th>Min Stock</th><th>Cost Price</th><th>Sale Price</th><th>Location</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div><input id="inv-search" type="text" placeholder="🔍 Search items…" oninput="filterInv(this.value)" style="margin-top:10px;border:1.5px solid #ddd;padding:8px 12px;border-radius:7px;font-size:13px;outline:none;width:260px;">`;
 }
 function filterInv(q){const t=document.querySelector('#inv-content table tbody');if(!t)return;const rows=db.inventory.filter(it=>(it.name+it.sku+it.category).toLowerCase().includes(q.toLowerCase()));t.innerHTML=rows.map(it=>{const stockColor=(it.currentStock||0)<=(it.minStock||0)&&it.minStock>0?'#c62828':'#2E7D32';return`<tr><td><strong>${it.sku||'—'}</strong></td><td>${it.name}<div style="font-size:11px;color:#888;">${it.category||''}</div></td><td>${it.unit||'pcs'}</td><td style="font-weight:700;color:${stockColor};">${it.currentStock||0}</td><td>${it.minStock||0}</td><td>EGP ${(it.costPrice||0).toLocaleString()}</td><td>EGP ${(it.salePrice||0).toLocaleString()}</td><td>${it.location||'—'}</td><td style="white-space:nowrap;display:flex;gap:4px;"><button style="background:#2E7D32;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;" onclick="openMovementModal('${it.id}','in')">+ In</button><button style="background:#e65100;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;" onclick="openMovementModal('${it.id}','out')">− Out</button><button style="background:#1565C0;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;" onclick="openItemModal('${it.id}')">Edit</button><button style="background:#c62828;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;" onclick="deleteItem('${it.id}')">×</button></td></tr>`;}).join('');}
 function renderMovementsTable(){
@@ -666,12 +678,27 @@ function renderLowStockTable(){
 
 function openItemModal(id){
     const it=id?db.inventory.find(x=>x.id===id):{};
-    const cats=(db.inventory||[]).map(i=>i.category).filter((v,i,a)=>v&&a.indexOf(v)===i);
+    const imgPreview = it.imgBase64
+        ? `<img src="${it.imgBase64}" style="width:120px;height:100px;object-fit:cover;border-radius:6px;display:block;margin-bottom:6px;">`
+        : `<div style="width:120px;height:100px;border:2px dashed #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:6px;">📦</div>`;
     openModalShell(`<div style="background:white;border-radius:12px;padding:28px;max-width:600px;width:100%;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h3 style="font-size:17px;color:#1A4325;">${id?'Edit Item':'New Inventory Item'}</h3><button onclick="closeModalShell()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa;">×</button></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
             ${[['it-sku','SKU / Item Code','text',it.sku||''],['it-name','Item Name *','text',it.name||''],['it-category','Category','text',it.category||''],['it-unit','Unit (pcs/kg/m...)','text',it.unit||'pcs'],['it-cost','Cost Price (EGP)','number',it.costPrice||0],['it-sale','Sale Price (EGP)','number',it.salePrice||0],['it-current','Current Stock','number',it.currentStock||0],['it-min','Minimum Stock Level','number',it.minStock||0],['it-location','Storage Location','text',it.location||''],['it-supplier','Supplier','text',it.supplier||'']].map(([fid,lbl,type,val])=>`<div><label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px;">${lbl}</label><input id="${fid}" type="${type}" value="${String(val).replace(/"/g,'&quot;')}" style="width:100%;border:1.5px solid #ddd;padding:8px 10px;border-radius:7px;font-size:14px;outline:none;font-family:inherit;"></div>`).join('')}
-            <div style="grid-column:1/-1"><label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px;">Description</label><textarea id="it-desc" style="width:100%;border:1.5px solid #ddd;padding:8px 10px;border-radius:7px;font-size:14px;outline:none;font-family:inherit;resize:vertical;min-height:60px;">${it.description||''}</textarea></div>
+            <div style="grid-column:1/-1"><label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px;">Description / Specifications</label><textarea id="it-desc" style="width:100%;border:1.5px solid #ddd;padding:8px 10px;border-radius:7px;font-size:14px;outline:none;font-family:inherit;resize:vertical;min-height:60px;">${it.description||''}</textarea></div>
+            <div style="grid-column:1/-1"><label style="font-size:11px;color:#666;font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px;">Product Image</label>
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div id="it-img-preview">${imgPreview}</div>
+                    <div>
+                        <label style="cursor:pointer;background:#D6F0E0;border:1px solid #2E7D32;color:#1A4325;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:700;display:inline-block;">
+                            📷 Upload Image
+                            <input type="file" accept="image/*" onchange="handleItemImage(this)" style="display:none;">
+                        </label>
+                        <input type="hidden" id="it-img" value="${it.imgBase64||''}">
+                        ${it.imgBase64?`<button onclick="document.getElementById('it-img').value='';document.getElementById('it-img-preview').innerHTML='<div style=\\'width:120px;height:100px;border:2px dashed #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px;\\'>📦</div>';" style="margin-top:8px;display:block;background:none;border:1px solid #f44336;color:#f44336;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:12px;">✕ Remove</button>`:''}
+                    </div>
+                </div>
+            </div>
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
             <button onclick="closeModalShell()" style="background:white;border:1.5px solid #ddd;padding:10px 20px;border-radius:7px;cursor:pointer;font-size:13px;">Cancel</button>
@@ -679,13 +706,106 @@ function openItemModal(id){
         </div>
     </div>`);
 }
+
+function handleItemImage(input){
+    if(!input.files[0])return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+        const img=new Image();
+        img.onload=()=>{
+            const canvas=document.createElement('canvas');
+            const maxW=400,maxH=300;
+            let w=img.width,h=img.height;
+            if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+            if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+            canvas.width=w;canvas.height=h;
+            canvas.getContext('2d').drawImage(img,0,0,w,h);
+            const small=canvas.toDataURL('image/jpeg',0.75);
+            document.getElementById('it-img').value=small;
+            document.getElementById('it-img-preview').innerHTML=`<img src="${small}" style="width:120px;height:100px;object-fit:cover;border-radius:6px;display:block;margin-bottom:6px;">`;
+        };
+        img.src=e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
 function saveItem(id){
     const name=document.getElementById('it-name').value.trim();if(!name){alert('Item name required');return;}
     const g=x=>document.getElementById(x)?.value;
-    const rec={id:id||Date.now().toString(),sku:g('it-sku'),name,category:g('it-category'),unit:g('it-unit')||'pcs',costPrice:parseFloat(g('it-cost'))||0,salePrice:parseFloat(g('it-sale'))||0,currentStock:parseFloat(g('it-current'))||0,minStock:parseFloat(g('it-min'))||0,location:g('it-location'),supplier:g('it-supplier'),description:g('it-desc'),created:id?(db.inventory.find(x=>x.id===id)?.created||new Date().toLocaleDateString()):new Date().toLocaleDateString()};
+    const rec={id:id||Date.now().toString(),sku:g('it-sku'),name,category:g('it-category'),unit:g('it-unit')||'pcs',costPrice:parseFloat(g('it-cost'))||0,salePrice:parseFloat(g('it-sale'))||0,currentStock:parseFloat(g('it-current'))||0,minStock:parseFloat(g('it-min'))||0,location:g('it-location'),supplier:g('it-supplier'),description:g('it-desc'),imgBase64:g('it-img')||'',created:id?(db.inventory.find(x=>x.id===id)?.created||new Date().toLocaleDateString()):new Date().toLocaleDateString()};
     if(!db.inventory)db.inventory=[];
     if(id){const i=db.inventory.findIndex(x=>x.id===id);if(i>=0)db.inventory[i]=rec;}else db.inventory.push(rec);
     saveDB('inventory');closeModalShell();renderInvTab();updateInvTopActions();_refreshView();
+}
+
+// ── Inventory Picker (used in Invoice & Quotation modals) ──────────────
+function openInventoryPicker(mode){
+    const items=db.inventory||[];
+    if(!items.length){alert('No inventory items found. Please add items in Inventory first.');return;}
+    const cards=items.map(it=>{
+        const thumb=it.imgBase64
+            ?`<img src="${it.imgBase64}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:6px;display:block;">`
+            :`<div style="width:100%;height:80px;border:1.5px dashed #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:6px;">📦</div>`;
+        return `<div onclick="pickInventoryItem('${it.id}','${mode}')" style="cursor:pointer;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px;background:white;transition:.15s;" onmouseover="this.style.borderColor='#2E7D32';this.style.background='#f0faf4'" onmouseout="this.style.borderColor='#e0e0e0';this.style.background='white'">
+            ${thumb}
+            <div style="font-size:12px;font-weight:700;color:#1A4325;margin-bottom:2px;">${it.name}</div>
+            ${it.sku?`<div style="font-size:10px;color:#888;margin-bottom:3px;">SKU: ${it.sku}</div>`:''}
+            <div style="font-size:13px;font-weight:700;color:#2E7D32;">EGP ${(it.salePrice||0).toLocaleString()}</div>
+            <div style="font-size:10px;color:#888;margin-top:2px;">Stock: ${it.currentStock||0} ${it.unit||'pcs'}</div>
+        </div>`;
+    }).join('');
+    const overlay=document.createElement('div');
+    overlay.id='inv-picker-overlay';
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10002;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+    overlay.innerHTML=`<div style="background:white;border-radius:14px;padding:24px;max-width:780px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="color:#1A4325;font-size:16px;">📦 Select Product from Inventory</h3>
+            <button onclick="document.getElementById('inv-picker-overlay').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#aaa;line-height:1;">×</button>
+        </div>
+        <input type="text" placeholder="🔍 Search products…" oninput="filterPickerItems(this.value,'${mode}')" style="width:100%;border:1.5px solid #ddd;padding:9px 12px;border-radius:8px;font-size:14px;outline:none;margin-bottom:16px;">
+        <div id="picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;">${cards}</div>
+    </div>`;
+    overlay.addEventListener('mousedown',e=>{if(e.target===overlay)overlay.remove();});
+    document.body.appendChild(overlay);
+}
+
+function filterPickerItems(q,mode){
+    const items=(db.inventory||[]).filter(it=>(it.name+(it.sku||'')+(it.category||'')).toLowerCase().includes(q.toLowerCase()));
+    document.getElementById('picker-grid').innerHTML=items.map(it=>{
+        const thumb=it.imgBase64?`<img src="${it.imgBase64}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:6px;display:block;">`:
+            `<div style="width:100%;height:80px;border:1.5px dashed #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:6px;">📦</div>`;
+        return `<div onclick="pickInventoryItem('${it.id}','${mode}')" style="cursor:pointer;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px;background:white;transition:.15s;" onmouseover="this.style.borderColor='#2E7D32';this.style.background='#f0faf4'" onmouseout="this.style.borderColor='#e0e0e0';this.style.background='white'">
+            ${thumb}
+            <div style="font-size:12px;font-weight:700;color:#1A4325;margin-bottom:2px;">${it.name}</div>
+            ${it.sku?`<div style="font-size:10px;color:#888;margin-bottom:3px;">SKU: ${it.sku}</div>`:''}
+            <div style="font-size:13px;font-weight:700;color:#2E7D32;">EGP ${(it.salePrice||0).toLocaleString()}</div>
+            <div style="font-size:10px;color:#888;margin-top:2px;">Stock: ${it.currentStock||0} ${it.unit||'pcs'}</div>
+        </div>`;
+    }).join('')||'<p style="color:#aaa;text-align:center;padding:20px;">No items found</p>';
+}
+
+function pickInventoryItem(id,mode){
+    const it=db.inventory.find(x=>x.id===id);
+    if(!it)return;
+    document.getElementById('inv-picker-overlay')?.remove();
+    if(mode==='invoice'){
+        document.querySelector('#inv-items tbody').insertAdjacentHTML('beforeend',invRowHTML(it.name||'',1,it.salePrice||0));
+        invCalc();
+    }else if(mode==='quotation'){
+        const specText=[
+            it.description||'',
+            it.category?`Category: ${it.category}`:'',
+            it.unit?`Unit: ${it.unit}`:''
+        ].filter(Boolean).join('\n');
+        document.querySelector('#q-items tbody').insertAdjacentHTML('beforeend',qRowHTML({
+            desc:it.name||'',
+            spec:specText,
+            imgBase64:it.imgBase64||'',
+            qty:1,
+            price:it.salePrice||0
+        }));
+        qCalc();
+    }
 }
 function deleteItem(id){if(!confirm('Delete this item?'))return;db.inventory=db.inventory.filter(x=>x.id!==id);saveDB('inventory');renderInvTab();_refreshView();}
 
@@ -948,7 +1068,6 @@ function clearAllData(){if(!confirm('Delete ALL data permanently?'))return;if(!c
 function deleteRecord(collection,id){
     console.log('deleteRecord called with collection:', collection, 'id:', id);
     if(!confirm('Delete this record?'))return;
-    
     try {
         db[collection]=db[collection].filter(r=>r.id!==id);
         saveDB(collection);
@@ -959,6 +1078,32 @@ function deleteRecord(collection,id){
         console.error('Error deleting record:', error);
         alert('Error deleting record: ' + error.message);
     }
+}
+
+function autoRegisterCustomer(client, phone, email){
+    if(!client || client === 'Unknown') return;
+    if(!db.customers) db.customers = [];
+    const exists = db.customers.find(c =>
+        c.name.trim().toLowerCase() === client.trim().toLowerCase() ||
+        (phone && c.phone && c.phone === phone)
+    );
+    if(exists){
+        // Update existing if we have new data
+        if(phone && !exists.phone)  { exists.phone = phone; }
+        if(email && !exists.email)  { exists.email = email; }
+        saveDB('customers');
+        return;
+    }
+    db.customers.push({
+        name: client,
+        phone: phone || '',
+        email: email || '',
+        company: '',
+        city: '',
+        notes: '',
+        created: new Date().toLocaleDateString()
+    });
+    saveDB('customers');
 }
 function exportData(){exportAllData();}
 

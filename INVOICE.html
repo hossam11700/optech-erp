@@ -16,20 +16,20 @@
         
         @media print {
             @page {
-                margin: 0; /* إلغاء الهوامش تلقائياً */
+                margin: 0;
                 size: auto;
             }
             body {
                 margin: 0;
                 padding: 0;
                 background: #fff !important;
-                -webkit-print-color-adjust: exact !important; /* تفعيل الخلفيات والجرافيكس */
+                -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
             .invoice-card {
                 width: 100% !important;
                 max-width: 100% !important;
-                height: auto !important; /* لضمان عدم توليد صفحة ثانية */
+                height: auto !important;
                 margin: 0 !important;
                 border: none !important;
                 box-shadow: none !important;
@@ -41,8 +41,10 @@
             .total-row input[type="checkbox"] { display: none !important; }
             input[type="text"], input[type="number"] { border: none !important; background: transparent !important; -webkit-appearance: none !important; appearance: none !important; }
             .input-inline { border: none !important; background: transparent !important; width: auto !important; min-width: 60px !important; }
-            .stamp-old { display: none !important; }
-            .signature-section { margin-top: 110px !important; padding: 10px 40px 30px 40px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-end !important; direction: ltr !important; page-break-inside: avoid; }
+            .signature-section {
+                display: flex !important;
+                margin-top: 80px !important;
+            }
         }
 
         body { font-family: var(--font-main); background: #e0e0e0; padding: 20px; color: #333; }
@@ -68,8 +70,8 @@
             border-bottom: 1px solid #eee; 
         }
         
-        .company-info h2 { color: var(--primary-green); font-size: 21px; margin-bottom: 4px; }
-        .company-info p { font-size: 13px; color: #666; line-height: 1.5; }
+        .company-info h2 { color: var(--primary-green); font-size: 17px; margin-bottom: 3px; }
+        .company-info p { font-size: 11px; color: #666; line-height: 1.5; }
 
         .invoice-title-center { text-align: center; }
         .invoice-title-center h1 { 
@@ -80,17 +82,19 @@
         }
 
         .logo-section { text-align: left; }
-        .logo-section img { width: 100px; height: auto; }
+        .logo-section img { width: 90px; height: auto; }
 
-        .invoice-details { padding: 15px 40px; display: flex; justify-content: space-between; background: #fcfcfc; }
+        .invoice-details { padding: 15px 40px; display: flex; gap: 60px; background: #fcfcfc; }
         
         .bill-to h3 { color: var(--primary-green); font-size: 16px; margin-bottom: 8px; border-bottom: 2px solid var(--accent-green); display: inline-block; }
-        .bill-to input { display: block; width: 280px; border: none; background: transparent; padding: 4px 0; font-size: 14px; font-weight: bold; outline: none; border-bottom: 1px dashed #ccc; margin-bottom: 4px; }
+        /* Client inputs: RTL / right-aligned for Arabic names */
+        .bill-to input { display: block; width: 280px; border: none; background: transparent; padding: 4px 0; font-size: 14px; font-weight: bold; outline: none; border-bottom: 1px dashed #ccc; margin-bottom: 4px; direction: rtl; text-align: right; }
 
+        /* Meta-data: label left, value right */
         .meta-data { text-align: left; }
-        .meta-row { display: flex; gap: 15px; margin-bottom: 6px; justify-content: flex-end; }
-        .meta-row label { font-weight: bold; color: var(--primary-green); width: 110px; text-align: right; font-size: 13px; }
-        .meta-row input { width: 140px; border: 1px solid #ddd; padding: 3px 6px; border-radius: 4px; text-align: center; font-size: 13px; }
+        .meta-row { display: flex; gap: 15px; margin-bottom: 6px; justify-content: flex-start; align-items: center; }
+        .meta-row label { font-weight: bold; color: var(--primary-green); width: 110px; text-align: left; font-size: 13px; }
+        .meta-row input { width: 140px; border: 1px solid #ddd; padding: 3px 6px; border-radius: 4px; text-align: left; font-size: 13px; }
 
         .items-table { width: calc(100% - 80px); margin: 10px 40px; border-collapse: collapse; }
         .items-table th { background: var(--primary-green); color: #fff; padding: 10px; text-align: center; font-size: 13px; }
@@ -100,9 +104,11 @@
         .col-qty { width: 10%; }
         .col-price { width: 20%; }
         .col-total { width: 20%; font-weight: bold; text-align: center; font-size: 14px; }
+        .total-cell { text-align: right; font-weight: bold; }
 
         .items-table input { width: 100%; border: none; padding: 6px; text-align: center; font-size: 13px; background: var(--field-gray); border-radius: 4px; }
-        .items-table .desc-input { text-align: right; }
+        .items-table .desc-input { text-align: left; }
+        .items-table .price { text-align: right; }
 
         .summary-section { padding: 10px 40px; display: flex; justify-content: space-between; }
         
@@ -123,13 +129,14 @@
         .total-row.grand-total { background: var(--light-green); padding: 8px; border: none; margin-top: 5px; font-weight: bold; font-size: 16px; color: var(--primary-green); }
 
 
-        .signature-section { margin-top: auto; padding: 30px 40px 50px; text-align: center; display: flex; flex-direction: column; align-items: center; min-height: 150px; }
-        .signature-container { position: relative; width: 220px; padding-top: 30px; margin-top: auto; }
-        .signature-image { width: 160px; height: auto; margin-bottom: -10px; position: relative; z-index: 1; }
-        .sig-line { border-top: 2px solid var(--primary-green); width: 100%; padding-top: 8px; font-weight: bold; font-size: 13px; position: relative; z-index: 2; }
-        .stamp-container { text-align: center; margin-top: 20px; }
-        .stamp-image { width: 150px; height: 150px; object-fit: contain; }
-
+        .signature-section { padding: 20px 40px 10px; display: flex; justify-content: center; align-items: flex-end; gap: 50px; min-height: 130px; }
+        .signature-container { text-align: center; width: 200px; }
+        .signature-image { width: 150px; height: auto; margin-bottom: -8px; position: relative; z-index: 1; }
+        .sig-line { border-top: 2px solid var(--primary-green); width: 100%; padding-top: 7px; font-weight: bold; font-size: 13px; }
+        .stamp-side { text-align: center; }
+        .stamp-side img { width: 120px; height: 120px; object-fit: contain; display: block; margin: 0 auto 4px; }
+        .stamp-side span { font-size: 11px; color: #888; }
+        .thank-you-bar { text-align:center; padding: 10px 40px 20px; font-size: 12px; color: #888; border-top: 1px solid #eee; }
         .controls { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; }
         .btn { padding: 12px; cursor: pointer; border: none; border-radius: 50%; width: 50px; height: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .btn-print { background: var(--primary-green); color: white; }
@@ -171,16 +178,16 @@
         </div>
         <div class="meta-data">
             <div class="meta-row">
-                <input type="text" id="invoiceNo">
                 <label>Invoice No</label>
+                <input type="text" id="invoiceNo">
             </div>
             <div class="meta-row">
-                <input type="text" id="invoiceDate">
                 <label>Invoice Date</label>
+                <input type="text" id="invoiceDate">
             </div>
             <div class="meta-row">
-                <input type="text" id="dueDate" placeholder="DD/MM/YYYY">
                 <label>Due Date</label>
+                <input type="text" id="dueDate" placeholder="DD/MM/YYYY">
             </div>
         </div>
     </div>
@@ -291,16 +298,23 @@
         </div>
     </div>
 
+    <!-- Screen: stamp + signature + thank-you in order -->
     <div class="signature-section">
-        <div class="stamp-container">
-            <img src="optech_stamp.png" alt="Official Stamp" class="stamp-image" onerror="this.style.display='none'">
-            <div style="font-size:12px;color:#888;margin-top:4px;text-align:center;">Official Stamp</div>
+        <div class="stamp-side">
+            <img src="optech_stamp.png" alt="Official Stamp" onerror="this.style.display='none'">
+            <span>Official Stamp</span>
         </div>
         <div class="signature-container">
             <img src="Signature.png" alt="Signature" class="signature-image" onerror="this.style.display='none'">
             <div class="sig-line">Authorized Signature</div>
         </div>
     </div>
+    <div class="thank-you-bar">
+        Thank you for your business — نشكركم على ثقتكم 🌿<br>
+        <span style="font-size:11px;">OPTECH IT Solutions &nbsp;|&nbsp; info@optech-eg.com &nbsp;|&nbsp; +20 1121450646</span>
+    </div>
+
+
 </div>
 
 <div class="controls">
@@ -475,30 +489,7 @@
     }
 
     function prepareAndPrint() {
-        // Get data for filename
-        const client = (document.getElementById('clientName').value || "Client").trim();
-        const invNo = document.getElementById('invoiceNo').value || "000";
-        const invDate = document.getElementById('invoiceDate').value;
-        
-        // Format date for filename (DD-MM-YYYY to DDMMYYYY)
-        const formattedDate = invDate.replace(/-/g, '');
-        const filename = `INV-${invNo}_${client}_${formattedDate}`;
-        
-        // Store filename in localStorage for the print dialog
-        localStorage.setItem('pdfFilename', filename);
-        
-        // Set document title as backup
-        const originalTitle = document.title;
-        document.title = filename;
-        
-        // Trigger print
         window.print();
-        
-        // Restore title
-        setTimeout(() => {
-            document.title = originalTitle;
-            localStorage.removeItem('pdfFilename');
-        }, 1000);
     }
 
     function loadInvoiceData() {
@@ -522,11 +513,9 @@
                 const formattedDate = invDate.replace(/-/g, '');
                 document.title = `INV-${invNo}_${client}_${formattedDate}`;
                 
-                // Auto-print if in print mode
+                // Auto-print if in print mode — parent (app.js) will trigger print
                 if (isPrintMode) {
-                    setTimeout(() => {
-                        window.print();
-                    }, 500);
+                    document.title = 'INV-' + invNo + '_' + client + '_' + formattedDate;
                 }
                 
                 // Clear the print data after using

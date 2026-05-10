@@ -74,7 +74,7 @@ app.use((req, res, next) => {
     }
 });
 
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Auth middleware (soft — adds req.user if valid token present) ─────────
 function withAuth(req, res, next) {
@@ -269,13 +269,13 @@ app.post('/api/activities', requireAuth, (req, res) => {
 });
 
 // ── 404 Handler for API routes ───────────────────────────────────────────
-app.use('/api/*', (req, res) => {
+app.use('/api/*splat', (req, res) => {
     res.status(404).json({ ok: false, error: 'API endpoint not found' });
 });
 
 // Catch-all route to serve frontend (for Render.com)
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+app.get('/*splat', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────
